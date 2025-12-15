@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(userData));
         setUser(userData);
-        router.push("/dashboard"); // Redirigir al dashboard
+        window.location.replace("/dashboard");
     };
 
     const logout = () => {

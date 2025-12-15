@@ -120,6 +120,7 @@ class StockMovementCreate(StockMovementBase):
 class StockMovement(StockMovementBase):
     id: int
     created_at: datetime
+    product: Optional[Product] = None
 
     class Config:
         from_attributes = True

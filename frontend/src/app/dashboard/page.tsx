@@ -34,7 +34,7 @@ export default function DashboardPage() {
 
                 setStats({
                     totalProducts: summaryRes.data.total_products,
-                    lowStock: summaryRes.data.low_stock_count,
+                    lowStock: summaryRes.data.low_stock_products,
                     totalValue: valueRes.data.total_value
                 });
 
@@ -81,7 +81,7 @@ export default function DashboardPage() {
             <div className="card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                     <h2 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Actividad Reciente</h2>
-                    <Link href="/dashboard/inventory" style={{ fontSize: '0.875rem', color: 'var(--primary-color)', textDecoration: 'none' }}>
+                    <Link href="/dashboard/inventory" prefetch={false} style={{ fontSize: '0.875rem', color: 'var(--primary-color)', textDecoration: 'none' }}>
                         Ver todo →
                     </Link>
                 </div>

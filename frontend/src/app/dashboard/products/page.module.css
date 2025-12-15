@@ -35,12 +35,14 @@
     background: var(--surface-color);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     border: 1px solid var(--border-color);
 }
 
 .table {
     width: 100%;
+    min-width: 720px;
     border-collapse: collapse;
     text-align: left;
 }
@@ -66,7 +68,7 @@
 }
 
 .table tr:hover {
-    background-color: #f9fafb;
+    background-color: var(--bg-primary);
 }
 
 .badge {
@@ -78,18 +80,21 @@
 }
 
 .badgeSuccess {
-    background-color: #d1fae5;
-    color: #065f46;
+    background-color: rgba(16, 185, 129, 0.15);
+    color: var(--success-color);
+    border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .badgeWarning {
-    background-color: #fef3c7;
-    color: #92400e;
+    background-color: rgba(245, 158, 11, 0.15);
+    color: var(--warning-color);
+    border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .badgeDanger {
-    background-color: #fee2e2;
-    color: #991b1b;
+    background-color: rgba(239, 68, 68, 0.15);
+    color: var(--error-color);
+    border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .actions {
@@ -109,7 +114,7 @@
 }
 
 .modal {
-    background: white;
+    background: var(--surface-color);
     padding: 2rem;
     border-radius: var(--radius-xl);
     width: 100%;

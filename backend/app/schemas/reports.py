@@ -81,6 +81,11 @@ class TopProduct(BaseModel):
     sku: str
     total_movements: int
     total_quantity: int
+    entries_count: int
+    exits_count: int
+    quantity_in: int
+    quantity_out: int
+    net_quantity: int
 
     class Config:
         from_attributes = True

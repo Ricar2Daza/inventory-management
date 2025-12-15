@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import styles from "./Sidebar.module.css";
+import { useState } from "react";
+import { useTheme } from "@/context/ThemeContext";
 
 interface SidebarProps {
     isOpen: boolean;
@@ -13,6 +15,27 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
     const { logout } = useAuth();
+    const { theme } = useTheme();
+    const logoCandidates = theme === "dark"
+        ? [
+            "/logo-octava-capa-remove.png",
+            "/logo-octava-capa.png",
+            "/logo-octava-capa.jpg",
+            "/logo-octava-capa.png.png",
+            "/logo-octava-capa.jpg.png",
+            "/globe.svg"
+        ]
+        : [
+            "/logo-octava-capa.png",
+            "/logo-octava-capa-remove.png",
+            "/logo-octava-capa.jpg",
+            "/logo-octava-capa.png.png",
+            "/logo-octava-capa.jpg.png",
+            "/globe.svg"
+        ];
+    const [logoIndex, setLogoIndex] = useState(0);
+    const [navBusy, setNavBusy] = useState(false);
+    const logoSrc = logoCandidates[logoIndex];
 
     const menuItems = [
         { label: "Dashboard", href: "/dashboard", icon: "📊" },
@@ -21,7 +44,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         { label: "Categorías", href: "/dashboard/categories", icon: "🏷️" },
         { label: "Proveedores", href: "/dashboard/suppliers", icon: "🏢" },
         { label: "Reportes", href: "/dashboard/reports", icon: "📈" },
-        { label: "Mi Perfil", href: "/dashboard/profile", icon: "👤" },
     ];
 
     const isActive = (path: string) => pathname === path;
@@ -35,8 +57,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''}`}>
                 <div className={styles.logoContainer}>
-                    <div style={{ width: 32, height: 32, background: 'var(--primary-color)', borderRadius: 8 }}></div>
-                    <span className={styles.logoText}>Inventario App</span>
+                    <img
+                        src={logoSrc}
+                        alt="Octava Capa"
+                        className="brand-mark"
+                        style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }}
+                        onError={() => setLogoIndex(i => Math.min(i + 1, logoCandidates.length - 1))}
+                    />
+                    <span className={styles.logoText}>Octava Capa</span>
                 </div>
 
                 <nav className={styles.nav}>
@@ -44,6 +72,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                             key={item.href}
                             href={item.href}
+                            prefetch={false}
+                            onClick={() => {
+                                if (navBusy) return;
+                                setNavBusy(true);
+                                onClose();
+                                setTimeout(() => setNavBusy(false), 600);
+                            }}
                             className={`${styles.navItem} ${isActive(item.href) ? styles.navItemActive : ''}`}
                         >
                             <span>{item.icon}</span>
@@ -54,7 +89,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                 <div className={styles.footer}>
                     <button
-                        onClick={logout}
+                        onClick={() => { onClose(); logout(); }}
                         className={styles.navItem}
                         style={{ width: '100%', color: 'var(--error-color)' }}
                     >

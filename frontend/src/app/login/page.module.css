@@ -10,7 +10,7 @@
 .loginCard {
     width: 100%;
     max-width: 400px;
-    background: white;
+    background: var(--surface-color);
     padding: 2.5rem;
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-lg);
