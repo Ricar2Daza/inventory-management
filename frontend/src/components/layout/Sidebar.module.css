@@ -1,0 +1,147 @@
+/* Sidebar Container */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    background-color: white;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    z-index: 50;
+    transition: width 0.3s ease;
+    width: 260px; /* Ancho por defecto */
+}
+
+.sidebar.collapsed {
+    width: 80px; /* Ancho colapsado */
+}
+
+/* Logo Area */
+.logoContainer {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    gap: 0.75rem;
+    overflow: hidden; /* Ocultar texto al colapsar */
+    white-space: nowrap;
+}
+
+.logoIcon {
+    min-width: 32px;
+    width: 32px;
+    height: 32px;
+    background: var(--primary-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.logoText {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    opacity: 1;
+    transition: opacity 0.2s;
+}
+
+.collapsed .logoText {
+    opacity: 0;
+    display: none;
+}
+
+/* Navigation */
+.nav {
+    flex: 1;
+    padding: 1.5rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: auto;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+    white-space: nowrap; /* Evitar saltos de línea */
+    overflow: hidden;
+}
+
+.navItem:hover {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.navItemActive {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.navItemIcon {
+    font-size: 1.25rem;
+    min-width: 24px; /* Asegurar ancho fijo */
+    text-align: center;
+}
+
+.collapsed .navItemText {
+    display: none;
+}
+
+.collapsed .navItem {
+    justify-content: center;
+    padding: 0.75rem 0;
+}
+
+/* Toggle Button (New) */
+.toggleBtn {
+    margin: 1rem;
+    padding: 0.5rem;
+    background: var(--bg-primary);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+.toggleBtn:hover {
+    background: var(--border-color);
+    color: var(--text-primary);
+}
+
+/* Mobile Overlay */
+.mobileOverlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        width: 260px !important; /* En móvil siempre ancho completo si está abierto */
+    }
+    
+    .sidebarOpen {
+        transform: translateX(0);
+    }
+
+    .toggleBtn {
+        display: none; /* No colapsar en móvil, usar overlay */
+    }
+}
