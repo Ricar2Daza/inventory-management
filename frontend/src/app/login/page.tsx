@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import styles from "./page.module.css";
 import api from "@/services/api";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function LoginPage() {
     const [username, setUsername] = useState("");
@@ -11,6 +12,7 @@ export default function LoginPage() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
+    const { theme } = useTheme();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -29,24 +31,13 @@ export default function LoginPage() {
                 }
             });
 
-            // 2. Obtener datos del usuario (opcional, si el login no los devuelve)
-            // Por ahora simularemos datos básicos con el username
-            const user = {
-                id: 0, // El ID real debería venir del backend
-                username: username,
-                email: "user@example.com", // Placeholder
-                role: "employee" // Placeholder
-            };
-
-            // Si tuvieras un endpoint /auth/me, lo llamaríamos aquí:
-            // const { data: userData } = await api.get('/auth/me', { 
-            //   headers: { Authorization: `Bearer ${tokenData.access_token}` } 
-            // });
-
-            login(tokenData.access_token, user);
+            // 2. Obtener datos reales del usuario
+            const { data: userData } = await api.get('/auth/me', {
+                headers: { Authorization: `Bearer ${tokenData.access_token}` }
+            });
+            login(tokenData.access_token, userData);
 
         } catch (err: any) {
-            console.error("Login error", err);
             if (err.response?.status === 401) {
                 setError("Usuario o contraseña incorrectos.");
             } else if (err.response?.status === 422) {
@@ -63,6 +54,24 @@ export default function LoginPage() {
         <div className={styles.loginContainer}>
             <div className={styles.loginCard}>
                 <div className={styles.header}>
+                    <img
+                        src={theme === "dark" ? "/logo-octava-capa-remove.png" : "/logo-octava-capa.png"}
+                        alt="Octava Capa"
+                        className="brand-mark"
+                        style={{ width: 64, height: 64, objectFit: 'contain', marginBottom: '0.75rem' }}
+                        onError={(e) => {
+                            const el = e.currentTarget as HTMLImageElement;
+                            const candidates = [
+                                theme === "dark" ? "/logo-octava-capa.png" : "/logo-octava-capa-remove.png",
+                                "/logo-octava-capa.jpg",
+                                "/logo-octava-capa.png.png",
+                                "/logo-octava-capa.jpg.png",
+                                "/globe.svg"
+                            ];
+                            const next = candidates.find((c) => !el.src.endsWith(c));
+                            if (next) el.src = next;
+                        }}
+                    />
                     <h1 className={styles.title}>Bienvenido</h1>
                     <p className={styles.subtitle}>Ingresa tus credenciales para continuar</p>
                 </div>

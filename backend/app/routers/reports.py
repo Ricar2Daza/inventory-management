@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, case
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -162,7 +162,11 @@ def get_top_products(
         Product.name,
         Product.sku,
         func.count(StockMovement.id).label('total_movements'),
-        func.sum(StockMovement.quantity).label('total_quantity')
+        func.sum(StockMovement.quantity).label('total_quantity'),
+        func.sum(case((StockMovement.movement_type == MovementType.ENTRADA, 1), else_=0)).label('entries_count'),
+        func.sum(case((StockMovement.movement_type == MovementType.SALIDA, 1), else_=0)).label('exits_count'),
+        func.sum(case((StockMovement.movement_type == MovementType.ENTRADA, StockMovement.quantity), else_=0)).label('quantity_in'),
+        func.sum(case((StockMovement.movement_type == MovementType.SALIDA, StockMovement.quantity), else_=0)).label('quantity_out')
     ).join(Product)
     
     period_start = None
@@ -177,16 +181,21 @@ def get_top_products(
         StockMovement.product_id, Product.name, Product.sku
     ).order_by(desc('total_movements')).limit(limit).all()
     
-    top_products = [
-        TopProduct(
+    top_products = []
+    for r in results:
+        net = (r.quantity_in or 0) - (r.quantity_out or 0)
+        top_products.append(TopProduct(
             product_id=r.product_id,
             product_name=r.name,
             sku=r.sku,
-            total_movements=r.total_movements,
-            total_quantity=r.total_quantity
-        )
-        for r in results
-    ]
+            total_movements=r.total_movements or 0,
+            total_quantity=r.total_quantity or 0,
+            entries_count=r.entries_count or 0,
+            exits_count=r.exits_count or 0,
+            quantity_in=r.quantity_in or 0,
+            quantity_out=r.quantity_out or 0,
+            net_quantity=net
+        ))
     
     return TopProductsReport(
         products=top_products,

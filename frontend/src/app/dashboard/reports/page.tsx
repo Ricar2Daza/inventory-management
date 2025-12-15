@@ -8,16 +8,17 @@ import { downloadCSV } from "@/services/exportUtils";
 // Interfaces para los reportes
 interface InventorySummary {
     total_products: number;
-    total_stock: number;
     total_categories: number;
     total_suppliers: number;
-    low_stock_count: number;
+    total_stock_value: number;
+    low_stock_products: number;
+    out_of_stock_products: number;
 }
 
 interface StockValue {
     total_value: number;
-    product_count: number;
-    average_value: number;
+    total_products: number;
+    average_product_value: number;
 }
 
 interface ProductLowStock {
@@ -33,6 +34,11 @@ interface TopProduct {
     product_name: string;
     total_movements: number;
     total_quantity: number;
+    entries_count: number;
+    exits_count: number;
+    quantity_in: number;
+    quantity_out: number;
+    net_quantity: number;
 }
 
 export default function ReportsPage() {
@@ -40,6 +46,7 @@ export default function ReportsPage() {
     const [valueReport, setValueReport] = useState<StockValue | null>(null);
     const [lowStock, setLowStock] = useState<ProductLowStock[]>([]);
     const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+    const [totalStockUnits, setTotalStockUnits] = useState<number>(0);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -51,18 +58,28 @@ export default function ReportsPage() {
                     api.get("/reports/inventory-summary"),
                     api.get("/reports/stock-value"),
                     api.get("/reports/low-stock"),
-                    api.get("/reports/top-products?limit=5")
+                    api.get("/reports/top-products?limit=5"),
+                    api.get("/reports/by-category")
                 ]);
 
                 setSummary(results[0].data);
                 setValueReport(results[1].data);
 
-                // Asegurar que sea array
-                const lowStockData = Array.isArray(results[2].data) ? results[2].data : (results[2].data.items || []);
+                // Low stock viene como objeto con products
+                const lowStockData = results[2].data?.products || [];
                 setLowStock(lowStockData);
 
-                const topProductsData = Array.isArray(results[3].data) ? results[3].data : (results[3].data.items || []);
+                // Top products viene como objeto con products
+                const topProductsData = results[3].data?.products || [];
                 setTopProducts(topProductsData);
+
+                // Calcular stock total sumando por categoría
+                const categories = results[4].data?.categories || [];
+                const totalUnits = categories.reduce(
+                    (acc: number, c: any) => acc + (c.total_stock || 0),
+                    0
+                );
+                setTotalStockUnits(totalUnits);
             } catch (error) {
                 console.error("Error fetching reports", error);
             } finally {
@@ -96,18 +113,18 @@ export default function ReportsPage() {
                 <Card
                     title="Valor Inventario"
                     value={`$${valueReport?.total_value?.toLocaleString() || 0}`}
-                    subtext={`Promedio: $${valueReport?.average_value?.toFixed(2) || 0}`}
+                    subtext={`Promedio: $${valueReport?.average_product_value?.toFixed(2) || 0}`}
                     color="var(--success-color)"
                 />
                 <Card
                     title="Stock Total"
-                    value={summary?.total_stock || 0}
+                    value={totalStockUnits || 0}
                     subtext="Unidades físicas"
                     color="#3b82f6"
                 />
                 <Card
                     title="Alerta Stock"
-                    value={summary?.low_stock_count || 0}
+                    value={summary?.low_stock_products || 0}
                     subtext="Productos bajo mínimo"
                     color="var(--error-color)"
                 />
@@ -127,25 +144,33 @@ export default function ReportsPage() {
                             📥 Exportar
                         </button>
                     </div>
-                    <table className={styles.table}>
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                <th>Movimientos</th>
-                                <th>Cant. Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {topProducts.length === 0 ? <tr><td colSpan={3}>Sin movimientos</td></tr> :
-                                topProducts.map((p, i) => (
-                                    <tr key={i}>
-                                        <td style={{ fontWeight: 500 }}>{p.product_name}</td>
-                                        <td>{p.total_movements}</td>
-                                        <td>{p.total_quantity}</td>
-                                    </tr>
-                                ))}
-                        </tbody>
-                    </table>
+                    <div className={styles.tableContainer}>
+                        <table className={styles.table}>
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Movimientos</th>
+                                    <th>Entradas</th>
+                                    <th>Salidas</th>
+                                    <th>Cant. Total</th>
+                                    <th>Neto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {topProducts.length === 0 ? <tr><td colSpan={3}>Sin movimientos</td></tr> :
+                                    topProducts.map((p, i) => (
+                                        <tr key={i}>
+                                            <td style={{ fontWeight: 500 }}>{p.product_name}</td>
+                                            <td>{p.total_movements}</td>
+                                            <td>{p.quantity_in} ({p.entries_count})</td>
+                                            <td>{p.quantity_out} ({p.exits_count})</td>
+                                            <td>{p.total_quantity}</td>
+                                            <td style={{ fontWeight: 600 }}>{p.net_quantity}</td>
+                                        </tr>
+                                    ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 {/* ALERTA STOCK BAJO */}
@@ -160,27 +185,29 @@ export default function ReportsPage() {
                             📥 Exportar
                         </button>
                     </div>
-                    <table className={styles.table}>
-                        <thead>
-                            <tr>
-                                <th>SKU</th>
-                                <th>Producto</th>
-                                <th>Stock Actual</th>
-                                <th>Mínimo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {lowStock.length === 0 ? <tr><td colSpan={4}>Todo en orden ✅</td></tr> :
-                                lowStock.map((p) => (
-                                    <tr key={p.id}>
-                                        <td style={{ fontSize: '0.85rem' }}>{p.sku}</td>
-                                        <td>{p.name}</td>
-                                        <td style={{ fontWeight: 700, color: 'var(--error-color)' }}>{p.current_stock}</td>
-                                        <td>{p.min_stock_level}</td>
-                                    </tr>
-                                ))}
-                        </tbody>
-                    </table>
+                    <div className={styles.tableContainer}>
+                        <table className={styles.table}>
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Producto</th>
+                                    <th>Stock Actual</th>
+                                    <th>Mínimo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {lowStock.length === 0 ? <tr><td colSpan={4}>Todo en orden ✅</td></tr> :
+                                    lowStock.map((p) => (
+                                        <tr key={p.id}>
+                                            <td style={{ fontSize: '0.85rem' }}>{p.sku}</td>
+                                            <td>{p.name}</td>
+                                            <td style={{ fontWeight: 700, color: 'var(--error-color)' }}>{p.current_stock}</td>
+                                            <td>{p.min_stock_level}</td>
+                                        </tr>
+                                    ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
             </div>

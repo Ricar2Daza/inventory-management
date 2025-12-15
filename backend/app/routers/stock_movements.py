@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 
 from app.database import get_db
@@ -18,7 +18,7 @@ def get_stock_movements(skip: int = 0, limit: int = 100, db: Session = Depends(g
     """
     Obtener lista de todos los movimientos de stock
     """
-    movements = db.query(StockMovement).order_by(StockMovement.created_at.desc()).offset(skip).limit(limit).all()
+    movements = db.query(StockMovement).options(joinedload(StockMovement.product)).order_by(StockMovement.created_at.desc()).offset(skip).limit(limit).all()
     return movements
 
 
@@ -35,7 +35,7 @@ def get_product_movements(product_id: int, db: Session = Depends(get_db)):
             detail=f"Producto con ID {product_id} no encontrado"
         )
     
-    movements = db.query(StockMovement).filter(
+    movements = db.query(StockMovement).options(joinedload(StockMovement.product)).filter(
         StockMovement.product_id == product_id
     ).order_by(StockMovement.created_at.desc()).all()
     
