@@ -42,4 +42,4 @@ La aplicación web estará disponible en: [http://localhost:3000](http://localho
 
 - **Usuario:** `admin`
 - **Contraseña:** `admin123`
-*(Si no funcionan, puedes registrar un nuevo usuario desde la UI o Swagger)*
+
