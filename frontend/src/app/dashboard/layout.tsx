@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 export default function DashboardLayout({
     children,
@@ -11,6 +13,14 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const { isAuthenticated, loading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!loading && !isAuthenticated) {
+            router.replace("/login");
+        }
+    }, [loading, isAuthenticated, router]);
 
     return (
         <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "var(--bg-color)" }}>
@@ -26,7 +36,7 @@ export default function DashboardLayout({
             }} className="main-content">
                 <Header onMenuClick={() => setSidebarOpen(true)} />
                 <main style={{ padding: "2rem", flex: 1 }}>
-                    {children}
+                    {isAuthenticated ? children : null}
                 </main>
                 <Footer />
             </div>
