@@ -210,8 +210,9 @@ export default function ProductsPage() {
                                         <td>{p.current_stock}</td>
                                         <td><span className={`${styles.badge} ${status.class}`}>{status.label}</span></td>
                                         <td className={styles.actions}>
-                                            <button className="btn" onClick={() => handleOpenModal(p)} style={{ color: 'var(--primary-color)' }}>✏️</button>
-                                            <button className="btn" onClick={() => handleDelete(p.id)} style={{ color: 'var(--error-color)' }}>🗑️</button>
+                                            <a href={`/dashboard/products/${p.id}`} className="btn" style={{ textDecoration: 'none', color: 'var(--text-primary)', marginRight: '0.5rem' }} title="Ver Historial">📄</a>
+                                            <button className="btn" onClick={() => handleOpenModal(p)} style={{ color: 'var(--primary-color)' }} title="Editar">✏️</button>
+                                            <button className="btn" onClick={() => handleDelete(p.id)} style={{ color: 'var(--error-color)' }} title="Eliminar">🗑️</button>
                                         </td>
                                     </tr>
                                 );

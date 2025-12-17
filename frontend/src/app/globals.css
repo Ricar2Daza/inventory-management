@@ -2,35 +2,44 @@
 
 :root {
   /* Brand Colors */
-  --primary-color: #4f46e5; /* Indigo 600 */
-  --primary-hover: #4338ca; /* Indigo 700 */
-  --primary-light: #eef2ff; /* Indigo 100 */
-  --secondary-color: #10b981; /* Emerald 500 */
-  
+  --primary-color: #4f46e5;
+  /* Indigo 600 */
+  --primary-hover: #4338ca;
+  /* Indigo 700 */
+  --primary-light: #eef2ff;
+  /* Indigo 100 */
+  --secondary-color: #10b981;
+  /* Emerald 500 */
+
   /* Neutral Colors */
-  --bg-color: #f3f4f6; /* Gray 100 */
-  --bg-primary: #f9fafb; /* Gray 50 */
+  --bg-color: #f3f4f6;
+  /* Gray 100 */
+  --bg-primary: #f9fafb;
+  /* Gray 50 */
   --surface-color: #ffffff;
-  --text-primary: #111827; /* Gray 900 */
-  --text-secondary: #6b7280; /* Gray 500 */
-  --border-color: #e5e7eb; /* Gray 200 */
-  
+  --text-primary: #111827;
+  /* Gray 900 */
+  --text-secondary: #6b7280;
+  /* Gray 500 */
+  --border-color: #e5e7eb;
+  /* Gray 200 */
+
   /* Status Colors */
   --success-color: #10b981;
   --warning-color: #f59e0b;
   --error-color: #ef4444;
-  
+
   /* Spacing & Layout */
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
-  
+
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  
+
   /* Transitions */
   --transition-fast: 150ms ease-in-out;
   --transition-normal: 300ms ease-in-out;
@@ -38,16 +47,24 @@
 
 /* Dark Theme */
 :root[data-theme='dark'] {
-  --primary-color: #818cf8; /* Indigo 400 */
-  --primary-hover: #6366f1; /* Indigo 500 */
+  --primary-color: #818cf8;
+  /* Indigo 400 */
+  --primary-hover: #6366f1;
+  /* Indigo 500 */
   --primary-light: rgba(99, 102, 241, 0.2);
 
-  --bg-color: #0b1020; /* Dark navy */
-  --bg-primary: #111827; /* Gray 900 */
-  --surface-color: #1f2937; /* Gray 800 */
-  --text-primary: #f9fafb; /* Gray 50 */
-  --text-secondary: #9ca3af; /* Gray 400 */
-  --border-color: #374151; /* Gray 700 */
+  --bg-color: #0b1020;
+  /* Dark navy */
+  --bg-primary: #111827;
+  /* Gray 900 */
+  --surface-color: #1f2937;
+  /* Gray 800 */
+  --text-primary: #f9fafb;
+  /* Gray 50 */
+  --text-secondary: #9ca3af;
+  /* Gray 400 */
+  --border-color: #374151;
+  /* Gray 700 */
 
   --success-color: #34d399;
   --warning-color: #fbbf24;
@@ -126,12 +143,15 @@ button {
 .brand-logo-light {
   display: block;
 }
+
 .brand-logo-dark {
   display: none;
 }
+
 :root[data-theme='dark'] .brand-logo-light {
   display: none;
 }
+
 :root[data-theme='dark'] .brand-logo-dark {
   display: block;
 }
@@ -141,10 +161,12 @@ button {
   opacity: 1;
   border-radius: var(--radius-md);
 }
+
 :root[data-theme='light'] .brand-mark {
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
   opacity: 0.98;
 }
+
 :root[data-theme='dark'] .brand-mark {
   filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.06));
 }
@@ -155,6 +177,7 @@ button {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background-color: var(--surface-color);
+  color: var(--text-primary);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
@@ -162,4 +185,9 @@ button {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.input option {
+  background-color: var(--surface-color);
+  color: var(--text-primary);
 }
