@@ -23,7 +23,7 @@ export default function CategoriesPage() {
             const { data } = await api.get("/categories/");
             setCategories(data);
         } catch (error) {
-            console.error("Error fetching categories", error);
+            if (process.env.NODE_ENV !== "production") console.error("Error fetching categories", error);
         } finally {
             setLoading(false);
         }

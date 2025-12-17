@@ -28,7 +28,7 @@ export default function SuppliersPage() {
             const { data } = await api.get("/suppliers/");
             setSuppliers(data);
         } catch (error) {
-            console.error("Error fetching suppliers", error);
+            if (process.env.NODE_ENV !== "production") console.error("Error fetching suppliers", error);
         } finally {
             setLoading(false);
         }

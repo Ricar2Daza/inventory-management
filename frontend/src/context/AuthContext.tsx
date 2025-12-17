@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         setUser(JSON.parse(savedUser));
                     }
                 } catch (error) {
-                    console.error("Sesión inválida", error);
+                    if (process.env.NODE_ENV !== "production") console.error("Sesión inválida", error);
                     logout();
                 }
             }

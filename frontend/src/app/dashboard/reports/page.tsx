@@ -81,7 +81,7 @@ export default function ReportsPage() {
                 );
                 setTotalStockUnits(totalUnits);
             } catch (error) {
-                console.error("Error fetching reports", error);
+                if (process.env.NODE_ENV !== "production") console.error("Error fetching reports", error);
             } finally {
                 setLoading(false);
             }

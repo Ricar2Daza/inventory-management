@@ -14,7 +14,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
-    const { logout } = useAuth();
+    const { logout, user } = useAuth();
     const { theme } = useTheme();
     const logoCandidates = theme === "dark"
         ? [
@@ -43,6 +43,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         { label: "Inventario", href: "/dashboard/inventory", icon: "📉" },
         { label: "Categorías", href: "/dashboard/categories", icon: "🏷️" },
         { label: "Proveedores", href: "/dashboard/suppliers", icon: "🏢" },
+        { label: "Almacenes", href: "/dashboard/warehouses", icon: "🏬" },
         { label: "Reportes", href: "/dashboard/reports", icon: "📈" },
     ];
 

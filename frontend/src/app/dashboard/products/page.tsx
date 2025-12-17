@@ -63,12 +63,12 @@ export default function ProductsPage() {
                     setCategories(catsRes.data);
                     setSuppliers(suppsRes.data);
                 } catch (e) {
-                    console.error("Error cargando catálogos", e);
+                    if (process.env.NODE_ENV !== "production") console.error("Error cargando catálogos", e);
                 }
             }
 
         } catch (error) {
-            console.error("Error fetching products", error);
+            if (process.env.NODE_ENV !== "production") console.error("Error fetching products", error);
         } finally {
             setLoading(false);
         }
@@ -87,7 +87,7 @@ export default function ProductsPage() {
             await api.delete(`/products/${id}`);
             fetchProducts(); // Recargar
         } catch (error) {
-            console.error("Error deleting product", error);
+            if (process.env.NODE_ENV !== "production") console.error("Error deleting product", error);
             alert("No se pudo eliminar el producto");
         }
     };
@@ -151,7 +151,7 @@ export default function ProductsPage() {
             setIsModalOpen(false);
             fetchProducts();
         } catch (error: any) {
-            console.error("Error saving product", error);
+            if (process.env.NODE_ENV !== "production") console.error("Error saving product", error);
             const message = error.response?.data?.detail || "Error al guardar el producto.";
             alert(`Error: ${message}`);
         }

@@ -44,7 +44,7 @@ export default function ProfilePage() {
             alert("✅ Perfil actualizado correctamente");
             // Aquí idealmente actualizaríamos el contexto, pero por ahora basta con el alert
         } catch (error: any) {
-            console.error(error);
+            if (process.env.NODE_ENV !== "production") console.error(error);
             alert("❌ Error al actualizar perfil: " + (error.response?.data?.detail || "Error desconocido"));
         } finally {
             setLoading(false);
@@ -67,7 +67,7 @@ export default function ProfilePage() {
             alert("✅ Contraseña cambiada exitosamente");
             setPassData({ current_password: "", new_password: "", confirm_password: "" });
         } catch (error: any) {
-            console.error(error);
+            if (process.env.NODE_ENV !== "production") console.error(error);
             alert("❌ Error al cambiar contraseña: " + (error.response?.data?.detail || "Contraseña actual incorrecta"));
         } finally {
             setLoading(false);

@@ -43,7 +43,7 @@ export default function DashboardPage() {
                 setRecentMovements(moves);
 
             } catch (error) {
-                console.error("Error fetching dashboard stats", error);
+                if (process.env.NODE_ENV !== "production") console.error("Error fetching dashboard stats", error);
             } finally {
                 setLoading(false);
             }

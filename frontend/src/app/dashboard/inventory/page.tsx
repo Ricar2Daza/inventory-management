@@ -45,7 +45,7 @@ export default function InventoryPage() {
             const items = Array.isArray(prodRes.data) ? prodRes.data : (prodRes.data.items || []);
             setProducts(items);
         } catch (error) {
-            console.error("Error fetching inventory data", error);
+            if (process.env.NODE_ENV !== "production") console.error("Error fetching inventory data", error);
         } finally {
             setLoading(false);
         }
@@ -69,7 +69,7 @@ export default function InventoryPage() {
             fetchData(); // Recargar historial
             alert("Movimiento registrado con éxito");
         } catch (error: any) {
-            console.error("Error creating movement", error);
+            if (process.env.NODE_ENV !== "production") console.error("Error creating movement", error);
             alert(error.response?.data?.detail || "Error al registrar movimiento");
         }
     };

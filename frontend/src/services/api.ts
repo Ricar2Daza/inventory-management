@@ -24,15 +24,10 @@ api.interceptors.request.use(
   }
 );
 
-// Interceptor para manejar errores (401 -> logout)
+// Interceptor para manejar errores sin afectar sesión
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Opcional: Redirigir al login o limpiar token
-      localStorage.removeItem('token');
-      // window.location.href = '/login'; // Cuidado con el loop en el server side
-    }
     return Promise.reject(error);
   }
 );
