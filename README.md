@@ -34,7 +34,7 @@ cd frontend
 npm install
 
 # Iniciar el servidor de desarrollo
-npm run dev
+npm run dev   ó    npm.cmd run dev
 ```
 La aplicación web estará disponible en: [http://localhost:3000](http://localhost:3000)
 
