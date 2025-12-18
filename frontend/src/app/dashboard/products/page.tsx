@@ -199,7 +199,7 @@ export default function ProductsPage() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                     <button
-                        className="btn bg-gray-600 text-white hover:bg-gray-700"
+                        className="btn btn-secondary"
                         style={{ marginRight: '0.5rem' }}
                         onClick={() => setIsImportModalOpen(true)}
                     >
@@ -242,14 +242,14 @@ export default function ProductsPage() {
                                             <button
                                                 className="btn"
                                                 onClick={() => handleDownloadLabel(p.id)}
-                                                style={{ color: '#4b5563', marginRight: '0.5rem' }}
+                                                style={{ color: 'var(--text-primary)', marginRight: '0.5rem', fontSize: '1.2rem' }}
                                                 title="Imprimir Etiqueta"
                                             >
                                                 🖨️
                                             </button>
-                                            <a href={`/dashboard/products/${p.id}`} className="btn" style={{ textDecoration: 'none', color: 'var(--text-primary)', marginRight: '0.5rem' }} title="Ver Historial">📄</a>
-                                            <button className="btn" onClick={() => handleOpenModal(p)} style={{ color: 'var(--primary-color)' }} title="Editar">✏️</button>
-                                            <button className="btn" onClick={() => handleDelete(p.id)} style={{ color: 'var(--error-color)' }} title="Eliminar">🗑️</button>
+                                            <a href={`/dashboard/products/${p.id}`} className="btn" style={{ textDecoration: 'none', color: 'var(--text-primary)', marginRight: '0.5rem', fontSize: '1.2rem' }} title="Ver Historial">📄</a>
+                                            <button className="btn" onClick={() => handleOpenModal(p)} style={{ color: 'var(--primary-color)', fontSize: '1.2rem' }} title="Editar">✏️</button>
+                                            <button className="btn" onClick={() => handleDelete(p.id)} style={{ color: 'var(--error-color)', fontSize: '1.2rem' }} title="Eliminar">🗑️</button>
                                         </td>
                                     </tr>
                                 );

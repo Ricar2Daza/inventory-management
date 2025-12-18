@@ -69,6 +69,9 @@
   --success-color: #34d399;
   --warning-color: #fbbf24;
   --error-color: #f87171;
+
+  /* Improved contrast for secondary elements */
+  --text-muted: #9ca3af;
 }
 
 * {
@@ -132,12 +135,22 @@ button {
 }
 
 .btn-primary {
-  background-color: var(--primary-color);
-  color: white;
+  background-color: var(--primary-color) !important;
+  color: #ffffff !important;
+  border: none;
 }
 
 .btn-primary:hover {
   background-color: var(--primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-color);
 }
 
 .brand-logo-light {
