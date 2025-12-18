@@ -198,7 +198,7 @@ async def import_products(
 ):
     """
     Importar productos masivamente desde un CSV.
-    Columnas esperadas: sku, name, unit_price, current_stock, min_stock_level, category_name, supplier_name
+    Columnas esperadas: sku, nombre, precio, cantidad_actual, alerta_stock_bajo, categoria, proveedor
     """
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="El archivo debe ser un CSV")
@@ -215,13 +215,14 @@ async def import_products(
 
     for row in csv_reader:
         try:
-            sku = row.get("sku", "").strip()
-            name = row.get("name", "").strip()
-            price_str = row.get("unit_price", "0")
-            stock_str = row.get("current_stock", "0")
-            min_str = row.get("min_stock_level", "5")
-            cat_name = row.get("category_name", "").strip()
-            sup_name = row.get("supplier_name", "").strip()
+            # Mapeo flexible para soportar headers en Inglés y Español
+            sku = (row.get("sku") or "").strip()
+            name = (row.get("name") or row.get("nombre") or "").strip()
+            price_str = (row.get("unit_price") or row.get("precio") or row.get("price") or "0")
+            stock_str = (row.get("current_stock") or row.get("cantidad_actual") or row.get("stock") or "0")
+            min_str = (row.get("min_stock_level") or row.get("alerta_stock_bajo") or row.get("min_stock") or "5")
+            cat_name = (row.get("category_name") or row.get("categoria") or row.get("category") or "").strip()
+            sup_name = (row.get("supplier_name") or row.get("proveedor") or row.get("supplier") or "").strip()
 
             if not sku or not name:
                 report["errors"].append(f"Fila incompleta (Falta SKU o Nombre): {row}")

@@ -1,0 +1,21 @@
+SKU,Nombre,Precio,Cantidad_Actual,Alerta_Stock_Bajo,Categoria,Proveedor
+ZAP-NIKE-001,Nike Air Max 270 Negro talla 40,450000,25,5,Zapatos,VangriChicha
+ZAP-ADID-002,Adidas Superstar Blanco talla 41,380000,15,5,Zapatos,VangriChicha
+ZAP-PUMA-003,Puma RS-X Azul talla 42,320000,30,8,Zapatos,VangriChicha
+ZAP-REEBOK-004,Reebok Classic Leather Gris talla 39,280000,12,5,Zapatos,VangriChicha
+ZAP-CONVERSE-005,Converse Chuck Taylor Rojo talla 43,250000,40,10,Zapatos,VangriChicha
+ZAP-VANS-006,Vans Old Skool Negro talla 40,290000,22,7,Zapatos,VangriChicha
+ZAP-NIKE-007,Nike Air Force 1 Blanco talla 41,420000,18,5,Zapatos,VangriChicha
+ZAP-ADID-008,Adidas Gazelle Verde talla 42,350000,20,6,Zapatos,VangriChicha
+ZAP-PUMA-009,Puma Suede Classic Beige talla 39,300000,35,8,Zapatos,VangriChicha
+ZAP-NIKE-010,Nike React Element Gris talla 43,480000,10,5,Zapatos,VangriChicha
+ZAP-ADID-011,Adidas Stan Smith Blanco talla 40,330000,28,7,Zapatos,VangriChicha
+ZAP-CONVERSE-012,Converse One Star Amarillo talla 41,270000,16,5,Zapatos,VangriChicha
+ZAP-VANS-013,Vans Sk8-Hi Negro talla 42,310000,24,6,Zapatos,VangriChicha
+ZAP-REEBOK-014,Reebok Club C Blanco talla 39,290000,19,5,Zapatos,VangriChicha
+ZAP-NIKE-015,Nike Cortez Rojo talla 43,360000,32,8,Zapatos,VangriChicha
+ZAP-ADID-016,Adidas NMD Negro talla 40,410000,14,5,Zapatos,VangriChicha
+ZAP-PUMA-017,Puma Cali Sport Blanco talla 38,340000,27,7,Zapatos,VangriChicha
+ZAP-NIKE-018,Nike Blazer Mid Azul talla 41,390000,21,6,Zapatos,VangriChicha
+ZAP-VANS-019,Vans Authentic Negro talla 42,260000,33,8,Zapatos,VangriChicha
+ZAP-CONVERSE-020,Converse Pro Leather Blanco talla 39,285000,17,5,Zapatos,VangriChicha

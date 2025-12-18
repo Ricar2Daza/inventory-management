@@ -83,7 +83,7 @@ export default function ImportProductsModal({
 
     const handleDownloadTemplate = () => {
         const csvContent =
-            "sku,name,unit_price,current_stock,min_stock_level,category_name,supplier_name\n" +
+            "sku,nombre,precio,cantidad_actual,alerta_stock_bajo,categoria,proveedor\n" +
             "SKU001,Producto Ejemplo,100.50,50,5,Electrónica,Proveedor A";
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         const link = document.createElement("a");
@@ -131,8 +131,8 @@ export default function ImportProductsModal({
                                 onDragLeave={handleDragLeave}
                                 onDrop={handleDrop}
                                 className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${dragging
-                                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                                        : "border-gray-300 dark:border-gray-600 hover:border-blue-400"
+                                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                                    : "border-gray-300 dark:border-gray-600 hover:border-blue-400"
                                     }`}
                             >
                                 <div className="flex flex-col items-center justify-center space-y-2">
