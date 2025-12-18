@@ -39,6 +39,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     const menuItems = [
         { label: "Dashboard", href: "/dashboard", icon: "📊" },
+        { label: "Ventas (POS)", href: "/dashboard/pos", icon: "🛒" },
         { label: "Productos", href: "/dashboard/products", icon: "📦" },
         { label: "Inventario", href: "/dashboard/inventory", icon: "📉" },
         { label: "Categorías", href: "/dashboard/categories", icon: "🏷️" },

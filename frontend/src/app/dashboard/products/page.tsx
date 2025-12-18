@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import api from "@/services/api";
 import styles from "./page.module.css";
 import { useAuth } from "@/context/AuthContext";
+import ImportProductsModal from "@/components/products/ImportProductsModal";
 
 // Interface simplificada según tu backend
 interface Product {
@@ -23,9 +24,12 @@ export default function ProductsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const { user } = useAuth();
 
-    // Modal state
+    // Modal state for Edit/Create
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+    // Modal state for Import
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
     // Catálogos para el formulario
     const [categories, setCategories] = useState<any[]>([]);
@@ -89,6 +93,24 @@ export default function ProductsPage() {
         } catch (error) {
             if (process.env.NODE_ENV !== "production") console.error("Error deleting product", error);
             alert("No se pudo eliminar el producto");
+        }
+    };
+
+    const handleDownloadLabel = async (productId: number) => {
+        try {
+            const response = await api.get(`/products/${productId}/label`, {
+                responseType: 'blob', // Important for PDF
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `label_product_${productId}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode?.removeChild(link);
+        } catch (error) {
+            if (process.env.NODE_ENV !== "production") console.error("Error downloading label", error);
+            alert("Error al descargar etiqueta.");
         }
     };
 
@@ -176,6 +198,13 @@ export default function ProductsPage() {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
+                    <button
+                        className="btn bg-gray-600 text-white hover:bg-gray-700"
+                        style={{ marginRight: '0.5rem' }}
+                        onClick={() => setIsImportModalOpen(true)}
+                    >
+                        📥 Importar CSV
+                    </button>
                     <button className="btn btn-primary" onClick={() => handleOpenModal()}>
                         + Nuevo Producto
                     </button>
@@ -210,6 +239,14 @@ export default function ProductsPage() {
                                         <td>{p.current_stock}</td>
                                         <td><span className={`${styles.badge} ${status.class}`}>{status.label}</span></td>
                                         <td className={styles.actions}>
+                                            <button
+                                                className="btn"
+                                                onClick={() => handleDownloadLabel(p.id)}
+                                                style={{ color: '#4b5563', marginRight: '0.5rem' }}
+                                                title="Imprimir Etiqueta"
+                                            >
+                                                🖨️
+                                            </button>
                                             <a href={`/dashboard/products/${p.id}`} className="btn" style={{ textDecoration: 'none', color: 'var(--text-primary)', marginRight: '0.5rem' }} title="Ver Historial">📄</a>
                                             <button className="btn" onClick={() => handleOpenModal(p)} style={{ color: 'var(--primary-color)' }} title="Editar">✏️</button>
                                             <button className="btn" onClick={() => handleDelete(p.id)} style={{ color: 'var(--error-color)' }} title="Eliminar">🗑️</button>
@@ -222,7 +259,15 @@ export default function ProductsPage() {
                 </table>
             </div>
 
-            {/* MODAL */}
+            <ImportProductsModal
+                isOpen={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                onSuccess={() => {
+                    fetchProducts();
+                }}
+            />
+
+            {/* MODAL (Existing Product Form Modal) */}
             {isModalOpen && (
                 <div className={styles.modalOverlay} onClick={() => setIsModalOpen(false)}>
                     <div className={styles.modal} onClick={e => e.stopPropagation()}>

@@ -76,3 +76,34 @@ class StockMovement(Base):
 
     # Relación con producto
     product = relationship("Product", back_populates="stock_movements")
+
+
+class Order(Base):
+    """Modelo de Venta/Pedido"""
+    __tablename__ = "orders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    total_amount = Column(Float, nullable=False)
+    payment_method = Column(String(50), nullable=False) # efectivo, tarjeta, etc.
+    status = Column(String(20), default="completed") # completed, cancelled
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relación con items
+    items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
+
+
+class OrderItem(Base):
+    """Items individuales de una venta"""
+    __tablename__ = "order_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    quantity = Column(Integer, nullable=False)
+    unit_price = Column(Float, nullable=False) # Precio al momento de la venta
+    subtotal = Column(Float, nullable=False)
+
+    # Relaciones
+    order = relationship("Order", back_populates="items")
+    product = relationship("Product")
+
