@@ -73,12 +73,11 @@ export default function InventoryPage() {
             alert(error.response?.data?.detail || "Error al registrar movimiento");
         }
     };
-
     return (
         <div className={styles.container}>
             <h1 className={styles.title}>Gestión de Inventario</h1>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
 
                 {/* FORMULARIO DE MOVIMIENTO */}
                 <div className="card" style={{ height: 'fit-content' }}>

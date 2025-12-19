@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine, Base
-from app.routers import categories, suppliers, products, stock_movements, auth, reports, notifications, warehouses
+from app.routers import categories, suppliers, products, stock_movements, auth, reports, notifications, warehouses, orders
 
 # Crear las tablas en la base de datos
 Base.metadata.create_all(bind=engine)
@@ -26,13 +26,14 @@ app.add_middleware(
 
 # Incluir routers
 app.include_router(auth.router)
+app.include_router(products.router)
 app.include_router(categories.router)
 app.include_router(suppliers.router)
-app.include_router(products.router)
 app.include_router(stock_movements.router)
 app.include_router(reports.router)
 app.include_router(notifications.router)
 app.include_router(warehouses.router)
+app.include_router(orders.router)
 
 
 @app.get("/", tags=["raíz"])

@@ -33,3 +33,16 @@
   color: var(--text-secondary);
 }
 
+@media (max-width: 640px) {
+  .footer {
+    flex-direction: column;
+    padding: 1.5rem 1rem;
+    text-align: center;
+  }
+
+  .brand,
+  .links {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

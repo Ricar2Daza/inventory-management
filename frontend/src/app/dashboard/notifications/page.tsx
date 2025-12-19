@@ -40,10 +40,7 @@ export default function NotificationsPage() {
         email_notifications: !!data.email_notifications,
       });
     } catch (err: any) {
-      if (err.response?.status === 401) {
-        router.replace("/login");
-        return;
-      }
+      if (process.env.NODE_ENV !== "production") console.error("Error fetching prefs", err);
     }
   };
 
@@ -56,10 +53,7 @@ export default function NotificationsPage() {
       const items = Array.isArray(data) ? data : (data.items || []);
       setNotifications(items);
     } catch (err: any) {
-      if (err.response?.status === 401) {
-        router.replace("/login");
-        return;
-      }
+      if (process.env.NODE_ENV !== "production") console.error("Error fetching notifications", err);
       setError(err.response?.data?.detail || "No se pudo cargar notificaciones.");
     } finally {
       setLoading(false);

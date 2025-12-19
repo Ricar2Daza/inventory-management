@@ -39,6 +39,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     const menuItems = [
         { label: "Dashboard", href: "/dashboard", icon: "📊" },
+        { label: "Ventas (POS)", href: "/dashboard/pos", icon: "🛒" },
         { label: "Productos", href: "/dashboard/products", icon: "📦" },
         { label: "Inventario", href: "/dashboard/inventory", icon: "📉" },
         { label: "Categorías", href: "/dashboard/categories", icon: "🏷️" },
@@ -65,7 +66,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }}
                         onError={() => setLogoIndex(i => Math.min(i + 1, logoCandidates.length - 1))}
                     />
-                    <span className={styles.logoText}>Octava Capa</span>
+                    <span className={`${styles.logoText} brand-text-hide`}>Octava Capa</span>
                 </div>
 
                 <nav className={styles.nav}>

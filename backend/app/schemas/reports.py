@@ -147,3 +147,15 @@ class SupplierReport(BaseModel):
 
     class Config:
         from_attributes = True
+# ============ SALES REPORT SCHEMAS ============
+
+class SalesSummary(BaseModel):
+    """Resumen de ventas y rentabilidad"""
+    total_revenue: float
+    today_revenue: float
+    total_orders: int
+    today_orders: int
+    average_order_value: float
+
+    class Config:
+        from_attributes = True
