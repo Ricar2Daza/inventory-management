@@ -204,3 +204,86 @@ button {
   background-color: var(--surface-color);
   color: var(--text-primary);
 }
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  h2 {
+    font-size: 1.25rem !important;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --radius-lg: 0.5rem;
+    --radius-xl: 0.75rem;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  h1 {
+    font-size: 1.25rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  h2 {
+    font-size: 1.1rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  /* Force vertical stacking for all grids on very small screens */
+  .dashboard-grid,
+  [style*="display: grid"],
+  [style*="display:grid"] {
+    grid-template-columns: 1fr !important;
+    box-sizing: border-box !important;
+    gap: 1rem !important;
+  }
+
+  /* Ensure cards don't exceed screen width */
+  .card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Ensure form grids also stack */
+  form[style*="grid"],
+  .modal form {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Common fix for tables on mobile */
+[class*="tableContainer"],
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+table {
+  min-width: 600px;
+  /* Force scroll on small screens */
+}
+
+/* Brandt text helper for ultra-small screens */
+@media (max-width: 400px) {
+  .brand-text-hide {
+    display: none !important;
+  }
+}

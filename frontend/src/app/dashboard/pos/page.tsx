@@ -137,54 +137,80 @@ export default function POSPage() {
     };
 
     return (
-        <div className="flex h-[calc(100vh-80px)] gap-4 p-4 font-sans text-gray-800 dark:text-gray-100">
+        <div className="pos-container" style={{
+            display: 'flex',
+            flexDirection: 'row',
+            gap: '1rem',
+            padding: '1rem',
+            height: 'calc(100vh - 120px)',
+            minHeight: '600px'
+        }}>
             {/* Lado Izquierdo: Productos */}
-            <div className="flex-1 flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden">
-                <div className="p-4 border-b dark:border-slate-700 bg-gray-50 dark:bg-slate-900/50">
+            <div style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                backgroundColor: 'var(--surface-color)',
+                borderRadius: 'var(--radius-lg)',
+                boxShadow: 'var(--shadow-md)',
+                overflow: 'hidden',
+                border: '1px solid var(--border-color)'
+            }}>
+                <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)' }}>
                     <input
                         type="search"
                         placeholder="🔍 Buscar por nombre o SKU..."
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-slate-600 dark:bg-slate-800 focus:ring-2 focus:ring-blue-500 outline-none text-lg transition-all"
+                        className="input"
+                        style={{ fontSize: '1.1rem' }}
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                         autoFocus
                     />
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 bg-gray-100 dark:bg-slate-900">
+                <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', backgroundColor: 'var(--bg-color)' }}>
                     {loading ? (
-                        <div className="flex justify-center items-center h-full">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                            Cargando...
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                            gap: '0.75rem'
+                        }}>
                             {filteredProducts.map(p => (
                                 <button
                                     key={p.id}
                                     onClick={() => addToCart(p)}
                                     disabled={p.current_stock <= 0}
-                                    className={`
-                                        relative group flex flex-col justify-between p-4 rounded-xl border transition-all duration-200
-                                        ${p.current_stock <= 0
-                                            ? 'opacity-50 grayscale cursor-not-allowed bg-gray-200 dark:bg-slate-800'
-                                            : 'bg-white dark:bg-slate-800 hover:shadow-xl hover:border-blue-400 hover:-translate-y-1 cursor-pointer border-gray-200 dark:border-slate-700'}
-                                    `}
+                                    className="card"
+                                    style={{
+                                        position: 'relative',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'space-between',
+                                        padding: '0.75rem',
+                                        opacity: p.current_stock <= 0 ? 0.5 : 1,
+                                        cursor: p.current_stock <= 0 ? 'not-allowed' : 'pointer',
+                                        textAlign: 'left'
+                                    }}
                                 >
-                                    <div className="w-full text-left">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <span className="text-xs font-mono font-bold text-gray-400 truncate">{p.sku}</span>
-                                            {p.current_stock > 0 ? (
-                                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-bold">
-                                                    Stock: {p.current_stock}
-                                                </span>
-                                            ) : (
-                                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 font-bold">
-                                                    Agotado
-                                                </span>
-                                            )}
+                                    <div style={{ width: '100%' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 600 }}>{p.sku}</span>
+                                            <span style={{
+                                                fontSize: '0.65rem',
+                                                padding: '0.1rem 0.4rem',
+                                                borderRadius: '999px',
+                                                backgroundColor: p.current_stock > 0 ? 'var(--primary-light)' : 'var(--error-color)',
+                                                color: p.current_stock > 0 ? 'var(--primary-color)' : 'white'
+                                            }}>
+                                                {p.current_stock > 0 ? `Stock: ${p.current_stock}` : 'Agotado'}
+                                            </span>
                                         </div>
-                                        <h3 className="font-bold text-sm leading-tight mb-2 line-clamp-2 h-10">{p.name}</h3>
-                                        <div className="text-xl font-black text-blue-600 dark:text-blue-400">${p.unit_price}</div>
+                                        <h3 style={{ fontSize: '0.85rem', fontWeight: 600, height: '2.5rem', overflow: 'hidden' }}>{p.name}</h3>
+                                        <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-color)' }}>${p.unit_price}</div>
                                     </div>
                                 </button>
                             ))}
@@ -194,80 +220,86 @@ export default function POSPage() {
             </div>
 
             {/* Lado Derecho: Carrito/Ticket */}
-            <div className="w-96 flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-gray-200 dark:border-slate-700">
-                <div className="p-4 bg-gray-900 text-white rounded-t-xl flex justify-between items-center">
-                    <h2 className="text-lg font-bold flex items-center gap-2">
-                        🛒 Venta Actual
-                    </h2>
-                    <span className="bg-white/20 px-2 py-1 rounded text-sm font-mono">
+            <div className="cart-sidebar" style={{
+                width: '380px',
+                display: 'flex',
+                flexDirection: 'column',
+                backgroundColor: 'var(--surface-color)',
+                borderRadius: 'var(--radius-lg)',
+                boxShadow: 'var(--shadow-lg)',
+                border: '1px solid var(--border-color)',
+                overflow: 'hidden'
+            }}>
+                <div style={{ padding: '1rem', backgroundColor: 'var(--text-primary)', color: 'white', display: 'flex', justifyContent: 'space-between' }}>
+                    <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>🛒 Venta Actual</h2>
+                    <span style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem' }}>
                         {cart.reduce((acc, i) => acc + i.quantity, 0)} items
                     </span>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem' }}>
                     {cart.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-50">
-                            <svg className="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                            <p>El carrito está vacío</p>
+                        <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', opacity: 0.5 }}>
+                            El carrito está vacío
                         </div>
                     ) : (
                         cart.map(item => (
-                            <div key={item.product.id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-slate-700/30 rounded-lg group hover:bg-white dark:hover:bg-slate-700 shadow-sm border border-transparent hover:border-gray-200 transition-all">
-                                <div className="flex-1 min-w-0 pr-2">
-                                    <h4 className="font-semibold text-sm truncate">{item.product.name}</h4>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div key={item.product.id} style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '0.75rem',
+                                borderBottom: '1px solid var(--border-color)',
+                                fontSize: '0.85rem'
+                            }}>
+                                <div style={{ flex: 1, minWidth: 0, paddingRight: '0.5rem' }}>
+                                    <h4 style={{ fontWeight: 600, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.product.name}</h4>
+                                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
                                         ${item.product.unit_price} x {item.quantity}
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="flex items-center bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-600">
-                                        <button
-                                            onClick={() => updateQuantity(item.product.id, -1)}
-                                            className="px-2 py-1 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-300 rounded-l-lg"
-                                        >-</button>
-                                        <span className="w-6 text-center text-sm font-bold">{item.quantity}</span>
-                                        <button
-                                            onClick={() => updateQuantity(item.product.id, 1)}
-                                            className="px-2 py-1 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-300 rounded-r-lg"
-                                        >+</button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-color)', borderRadius: '4px' }}>
+                                        <button onClick={() => updateQuantity(item.product.id, -1)} style={{ padding: '0.1rem 0.4rem' }}>-</button>
+                                        <span style={{ width: '1.5rem', textAlign: 'center', fontWeight: 700 }}>{item.quantity}</span>
+                                        <button onClick={() => updateQuantity(item.product.id, 1)} style={{ padding: '0.1rem 0.4rem' }}>+</button>
                                     </div>
-                                    <div className="font-bold w-16 text-right">
-                                        ${(item.product.unit_price * item.quantity).toFixed(2)}
-                                    </div>
-                                    <button
-                                        onClick={() => removeFromCart(item.product.id)}
-                                        className="text-gray-300 hover:text-red-500 transition-colors p-1"
-                                    >
-                                        ✕
-                                    </button>
+                                    <button onClick={() => removeFromCart(item.product.id)} style={{ color: 'var(--error-color)', marginLeft: '0.25rem' }}>✕</button>
                                 </div>
                             </div>
                         ))
                     )}
                 </div>
 
-                <div className="p-4 bg-gray-50 dark:bg-slate-900 border-t dark:border-slate-700 rounded-b-xl">
-                    <div className="flex justify-between items-center mb-4">
-                        <span className="text-gray-500 font-medium uppercase text-sm">Total a Pagar</span>
-                        <span className="text-3xl font-black text-gray-900 dark:text-white">
-                            ${cartTotal.toFixed(2)}
-                        </span>
+                <div style={{ padding: '1rem', borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <span style={{ color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.8rem' }}>Total a Pagar</span>
+                        <span style={{ fontSize: '1.5rem', fontWeight: 900 }}>${cartTotal.toFixed(2)}</span>
                     </div>
 
                     <button
                         onClick={handleCheckout}
                         disabled={cart.length === 0 || processing}
-                        className={`
-                            w-full py-4 rounded-xl font-bold text-lg shadow-lg transform transition-all
-                            ${cart.length === 0
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0'}
-                        `}
+                        className="btn btn-primary"
+                        style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }}
                     >
                         {processing ? "Procesando..." : "💵 COBRAR"}
                     </button>
                 </div>
             </div>
+
+            <style jsx>{`
+                @media (max-width: 1024px) {
+                    .pos-container {
+                        flex-direction: column !important;
+                        height: auto !important;
+                    }
+                    .cart-sidebar {
+                        width: 100% !important;
+                        margin-top: 1rem;
+                    }
+                }
+            `}</style>
         </div>
     );
 }

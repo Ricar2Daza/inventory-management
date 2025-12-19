@@ -107,7 +107,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                     style={{ width: 28, height: 28, objectFit: 'contain', marginLeft: 8, marginRight: 8 }}
                     onError={() => setLogoIndex(i => Math.min(i + 1, logoCandidates.length - 1))}
                 />
-                <h2 style={{ fontSize: '1.125rem', fontWeight: 600 }}>{getTitle()}</h2>
+                <h2 style={{ fontSize: '1.125rem', fontWeight: 600 }} className="brand-text-hide">{getTitle()}</h2>
             </div>
 
             <div className={styles.userInfo}>
@@ -158,20 +158,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                         </span>
                     ) : null}
                     {openNotif ? (
-                        <div
-                            style={{
-                                position: "absolute",
-                                right: 0,
-                                top: 44,
-                                backgroundColor: "var(--surface-color)",
-                                border: "1px solid var(--border-color)",
-                                borderRadius: "var(--radius-lg)",
-                                boxShadow: "var(--shadow-lg)",
-                                width: 280,
-                                zIndex: 50,
-                                overflow: "hidden"
-                            }}
-                        >
+                        <div className={styles.notifDropdown}>
                             <div style={{ padding: "0.75rem 1rem", fontWeight: 600, borderBottom: "1px solid var(--border-color)" }}>Notificaciones</div>
                             <div>
                                 {preview.length === 0 ? (
@@ -185,7 +172,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                                 )}
                             </div>
                             <div style={{ padding: "0.5rem 1rem", display: "flex", justifyContent: "flex-end", backgroundColor: "var(--bg-primary)" }}>
-                                <Link href="/dashboard/notifications" prefetch={false} className={styles.profileButton}>
+                                <Link href="/dashboard/notifications" prefetch={false} className={styles.profileButton} style={{ width: 'auto' }}>
                                     Ver todas
                                 </Link>
                             </div>

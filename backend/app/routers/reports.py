@@ -17,7 +17,8 @@ from app.schemas.reports import (
     CategoryInventory,
     CategoryReport,
     SupplierInventory,
-    SupplierReport
+    SupplierReport,
+    SalesSummary
 )
 
 router = APIRouter(
@@ -267,4 +268,40 @@ def get_inventory_by_supplier(db: Session = Depends(get_db)):
         suppliers=suppliers,
         total_suppliers=len(suppliers),
         total_value=total_value
+    )
+@router.get("/sales-summary", response_model=SalesSummary)
+def get_sales_summary(db: Session = Depends(get_db)):
+    """
+    Obtener resumen de ventas y rentabilidad
+    """
+    from app.models.inventory import Order
+    
+    # 1. Totales históricos
+    total_stats = db.query(
+        func.count(Order.id).label('total_orders'),
+        func.sum(Order.total_amount).label('total_revenue')
+    ).first()
+    
+    total_orders = total_stats.total_orders or 0
+    total_revenue = total_stats.total_revenue or 0.0
+    
+    # 2. Hoy
+    today = datetime.utcnow().date()
+    today_stats = db.query(
+        func.count(Order.id).label('today_orders'),
+        func.sum(Order.total_amount).label('today_revenue')
+    ).filter(func.date(Order.created_at) == today).first()
+    
+    today_orders = today_stats.today_orders or 0
+    today_revenue = today_stats.today_revenue or 0.0
+    
+    # 3. Promedio
+    average_order_value = total_revenue / total_orders if total_orders > 0 else 0.0
+    
+    return SalesSummary(
+        total_revenue=total_revenue,
+        today_revenue=today_revenue,
+        total_orders=total_orders,
+        today_orders=today_orders,
+        average_order_value=average_order_value
     )
