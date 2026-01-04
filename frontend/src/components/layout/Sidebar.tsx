@@ -37,18 +37,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const [navBusy, setNavBusy] = useState(false);
     const logoSrc = logoCandidates[logoIndex];
 
-    const menuItems = [
-        { label: "Dashboard", href: "/dashboard", icon: "📊" },
-        { label: "Ventas (POS)", href: "/dashboard/pos", icon: "🛒" },
-        { label: "Productos", href: "/dashboard/products", icon: "📦" },
-        { label: "Inventario", href: "/dashboard/inventory", icon: "📉" },
-        { label: "Categorías", href: "/dashboard/categories", icon: "🏷️" },
-        { label: "Proveedores", href: "/dashboard/suppliers", icon: "🏢" },
-        { label: "Almacenes", href: "/dashboard/warehouses", icon: "🏬" },
-        { label: "Clientes", href: "/dashboard/clients", icon: "👤" },
-        { label: "Gastos", href: "/dashboard/expenses", icon: "💸" },
-        { label: "Reportes", href: "/dashboard/reports", icon: "📈" },
-    ];
+    const baseMenu = [
+        { label: "Dashboard", href: "/dashboard", icon: "📊", roles: ["admin", "manager", "employee"] },
+        { label: "Ventas (POS)", href: "/dashboard/pos", icon: "🛒", roles: ["admin", "manager", "employee"] },
+        { label: "Productos", href: "/dashboard/products", icon: "📦", roles: ["admin", "manager", "employee"] },
+        { label: "Inventario", href: "/dashboard/inventory", icon: "📉", roles: ["admin", "manager", "employee"] },
+        { label: "Categorías", href: "/dashboard/categories", icon: "🏷️", roles: ["admin", "manager"] },
+        { label: "Proveedores", href: "/dashboard/suppliers", icon: "🏢", roles: ["admin", "manager"] },
+        { label: "Almacenes", href: "/dashboard/warehouses", icon: "🏬", roles: ["admin", "manager"] },
+        { label: "Clientes", href: "/dashboard/clients", icon: "👤", roles: ["admin", "manager"] },
+        { label: "Gastos", href: "/dashboard/expenses", icon: "💸", roles: ["admin", "manager"] },
+        { label: "Reportes", href: "/dashboard/reports", icon: "📈", roles: ["admin", "manager"] },
+    ] as const;
+    const role = user?.role || "employee";
+    const menuItems = baseMenu.filter(item => item.roles.includes(role as any));
 
     const isActive = (path: string) => pathname === path;
 

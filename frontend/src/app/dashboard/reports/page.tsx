@@ -136,44 +136,40 @@ export default function ReportsPage() {
         fetchTopProducts();
     }, [topProductsDays]);
 
-    const Card = ({ title, value, subtext, color }: any) => (
-        <div className="card" style={{ borderTop: `4px solid ${color}` }}>
-            <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{title}</h3>
-            <p style={{ fontSize: '2rem', fontWeight: 700, margin: '0.5rem 0' }}>{value}</p>
-            {subtext && <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{subtext}</p>}
-        </div>
-    );
-
     return (
         <div className={styles.container}>
             <h1 className={styles.title}>Reportes y Análisis</h1>
 
             {/* KPI CARDS */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-                <Card
-                    title="Total Productos"
-                    value={summary?.total_products || 0}
-                    subtext={`${summary?.total_categories || 0} Categorías`}
-                    color="var(--primary-color)"
-                />
-                <Card
-                    title="Valor Inventario"
-                    value={`$${valueReport?.total_value?.toLocaleString() || 0}`}
-                    subtext={`Promedio: $${valueReport?.average_product_value?.toFixed(2) || 0}`}
-                    color="var(--success-color)"
-                />
-                <Card
-                    title="Stock Total"
-                    value={totalStockUnits || 0}
-                    subtext="Unidades físicas"
-                    color="#3b82f6"
-                />
-                <Card
-                    title="Alerta Stock"
-                    value={summary?.low_stock_products || 0}
-                    subtext="Productos bajo mínimo"
-                    color="var(--error-color)"
-                />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                <div className="card" style={{ textAlign: 'center', padding: '1rem' }}>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>Valor Inventario</p>
+                    <p style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-color)' }}>
+                        ${valueReport?.total_value?.toLocaleString() ?? 0}
+                    </p>
+                </div>
+                <div className="card" style={{ textAlign: 'center', padding: '1rem' }}>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>Total Productos</p>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 800 }}>{summary?.total_products ?? 0}</p>
+                </div>
+                <div className="card" style={{ textAlign: 'center', padding: '1rem' }}>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>Stock Bajo</p>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 800, color: (summary?.low_stock_products || 0) > 0 ? 'var(--error-color)' : 'var(--success-color)' }}>
+                        {summary?.low_stock_products ?? 0}
+                    </p>
+                </div>
+                <div className="card" style={{ textAlign: 'center', padding: '1rem' }}>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>Agotados</p>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 800, color: (summary?.out_of_stock_products || 0) > 0 ? '#b91c1c' : 'var(--text-secondary)' }}>
+                        {summary?.out_of_stock_products ?? 0}
+                    </p>
+                </div>
+                <div className="card" style={{ textAlign: 'center', padding: '1rem' }}>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>Total Unidades</p>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                        {totalStockUnits.toLocaleString()}
+                    </p>
+                </div>
             </div>
 
             {/* NUEVA SECCIÓN: Resumen de Movimientos */}

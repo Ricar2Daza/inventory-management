@@ -7,6 +7,14 @@ import Script from "next/script";
 export const metadata: Metadata = {
   title: "Sistema de Inventario",
   description: "Gestión de inventario inteligente",
+  manifest: "/manifest.json",
+  themeColor: "#4f46e5",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Inventario",
+  },
 };
 
 export default function RootLayout({
