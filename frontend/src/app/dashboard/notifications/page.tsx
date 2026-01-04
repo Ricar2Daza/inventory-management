@@ -28,6 +28,7 @@ export default function NotificationsPage() {
   const [error, setError] = useState<string>("");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [prefs, setPrefs] = useState<Preferences | null>(null);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
 
@@ -43,6 +44,17 @@ export default function NotificationsPage() {
       if (process.env.NODE_ENV !== "production") console.error("Error fetching prefs", err);
     }
   };
+
+  const viewNotification = async (id: number) => {
+    try {
+      const { data } = await api.get(`/notifications/${id}`);
+      setSelectedNotification(data);
+    } catch (err: any) {
+      alert(err.response?.data?.detail || "No se pudo cargar la notificación.");
+    }
+  };
+
+  const closeDetail = () => setSelectedNotification(null);
 
   const fetchNotifications = async () => {
     try {
@@ -188,16 +200,21 @@ export default function NotificationsPage() {
                     <td>{new Date(n.created_at).toLocaleString()}</td>
                     <td><span className={`${styles.badge} ${badge.className}`}>{badge.label}</span></td>
                     <td style={{ fontWeight: 600 }}>{n.title}</td>
-                    <td style={{ maxWidth: 520 }}>{n.message}</td>
+                    <td style={{ maxWidth: 520 }}>
+                      {n.message.length > 50 ? n.message.substring(0, 50) + "..." : n.message}
+                    </td>
                     <td>{n.product_id ?? "-"}</td>
                     <td>{n.is_read ? "Leída" : "No leída"}</td>
                     <td style={{ display: "flex", gap: "0.5rem" }}>
+                      <button className="btn" onClick={() => router.push(`/notifications/${n.id}`)} title="Ver detalle">
+                        👁️
+                      </button>
                       {!n.is_read && (
-                        <button className="btn" onClick={() => markAsRead(n.id)} style={{ color: "var(--primary-color)" }}>
+                        <button className="btn" onClick={() => markAsRead(n.id)} style={{ color: "var(--primary-color)" }} title="Marcar como leída">
                           ✔️
                         </button>
                       )}
-                      <button className="btn" onClick={() => deleteNotification(n.id)} style={{ color: "var(--error-color)" }}>
+                      <button className="btn" onClick={() => deleteNotification(n.id)} style={{ color: "var(--error-color)" }} title="Eliminar">
                         🗑️
                       </button>
                     </td>
@@ -208,6 +225,52 @@ export default function NotificationsPage() {
           </tbody>
         </table>
       </div>
+
+      {selectedNotification && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
+        }}>
+          <div style={{
+            background: "var(--surface-color)", padding: "2rem", borderRadius: "var(--radius-lg)",
+            width: "90%", maxWidth: "500px", boxShadow: "var(--shadow-lg)"
+          }}>
+            <h2 style={{ marginBottom: "1.5rem", fontSize: "1.25rem", fontWeight: 600, borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem" }}>
+              Detalle de Notificación
+            </h2>
+            
+            <div style={{ marginBottom: "1rem" }}>
+              <span className={`${styles.badge} ${typeBadge(selectedNotification.type).className}`} style={{ marginBottom: "0.5rem", display: "inline-block" }}>
+                {typeBadge(selectedNotification.type).label}
+              </span>
+              <div style={{ fontSize: "0.875rem", color: "var(--text-secondary)", marginBottom: "0.5rem" }}>
+                {new Date(selectedNotification.created_at).toLocaleString()}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "1rem" }}>
+              <strong style={{ display: "block", marginBottom: "0.25rem" }}>Título:</strong> 
+              {selectedNotification.title}
+            </div>
+            
+            <div style={{ marginBottom: "1rem" }}>
+              <strong style={{ display: "block", marginBottom: "0.25rem" }}>Mensaje:</strong> 
+              <p style={{ whiteSpace: "pre-wrap", color: "var(--text-secondary)" }}>{selectedNotification.message}</p>
+            </div>
+
+            {selectedNotification.product_id && (
+              <div style={{ marginBottom: "1rem" }}>
+                <strong style={{ display: "block", marginBottom: "0.25rem" }}>ID Producto:</strong> 
+                {selectedNotification.product_id}
+              </div>
+            )}
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem", marginTop: "2rem" }}>
+              <button className="btn btn-primary" onClick={closeDetail}>Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={styles.card} style={{ marginTop: "1.5rem" }}>
         <h2 className={styles.cardTitle}>Preferencias</h2>

@@ -45,6 +45,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         { label: "Categorías", href: "/dashboard/categories", icon: "🏷️" },
         { label: "Proveedores", href: "/dashboard/suppliers", icon: "🏢" },
         { label: "Almacenes", href: "/dashboard/warehouses", icon: "🏬" },
+        { label: "Clientes", href: "/dashboard/clients", icon: "👤" },
+        { label: "Gastos", href: "/dashboard/expenses", icon: "💸" },
         { label: "Reportes", href: "/dashboard/reports", icon: "📈" },
     ];
 

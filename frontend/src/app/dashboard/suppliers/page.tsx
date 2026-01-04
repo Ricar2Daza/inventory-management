@@ -18,23 +18,31 @@ export default function SuppliersPage() {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     const initialForm = { name: "", contact_name: "", email: "", phone: "", address: "" };
     const [formData, setFormData] = useState(initialForm);
 
-    const fetchSuppliers = async () => {
+    const fetchSuppliers = async (query = "") => {
         try {
             setLoading(true);
-            const { data } = await api.get("/suppliers/");
+            const endpoint = query ? `/suppliers/search?q=${query}` : "/suppliers/";
+            const { data } = await api.get(endpoint);
             setSuppliers(data);
         } catch (error) {
-            if (process.env.NODE_ENV !== "production") console.error("Error fetching suppliers", error);
+            console.error("Error fetching suppliers", error);
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => { fetchSuppliers(); }, []);
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            fetchSuppliers(searchQuery);
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchQuery]);
 
     const handleDelete = async (id: number) => {
         if (!confirm("¿Eliminar proveedor?")) return;

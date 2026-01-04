@@ -1,11 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.logging_config import setup_logging
 from app.database import engine, Base
-from app.routers import categories, suppliers, products, stock_movements, auth, reports, notifications, warehouses, orders
+from app.routers import categories, suppliers, products, stock_movements, auth, reports, notifications, warehouses, orders, clients, expenses
+from app.models import inventory, financial, user, warehouse, notification, restaurant # Asegurar que SQLALchemy cargue todos los modelos
 
-# Crear las tablas en la base de datos
-Base.metadata.create_all(bind=engine)
+# Configurar logging
+setup_logging()
+
+# Las tablas se crean mediante migraciones de Alembic
+# Ejecutar: alembic upgrade head
+# Base.metadata.create_all(bind=engine)  # Removido - usar migraciones de Alembic
 
 app = FastAPI(
     title="Sistema de Inventario API",
@@ -34,6 +40,8 @@ app.include_router(reports.router)
 app.include_router(notifications.router)
 app.include_router(warehouses.router)
 app.include_router(orders.router)
+app.include_router(clients.router)
+app.include_router(expenses.router)
 
 
 @app.get("/", tags=["raíz"])

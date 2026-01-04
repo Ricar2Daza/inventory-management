@@ -24,10 +24,26 @@ api.interceptors.request.use(
   }
 );
 
-// Interceptor para manejar errores sin afectar sesión
+// Interceptor para manejar errores y redirección automática
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Manejar error 401 (No autorizado - token expirado o inválido)
+    if (error.response?.status === 401) {
+      // Limpiar datos de sesión
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      // Redirigir a login solo si estamos en el cliente
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+    }
+    
+    // Manejar error 403 (Prohibido - sin permisos)
+    // Se mantiene el error para que el componente pueda manejarlo
+    // (mostrar mensaje, etc.)
+    
     return Promise.reject(error);
   }
 );

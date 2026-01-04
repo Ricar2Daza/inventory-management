@@ -34,15 +34,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const token = localStorage.getItem("token");
             if (token) {
                 try {
-                    // Intentar obtener datos del usuario actual para validar token
-                    // Asumiendo que existe endpoint /auth/me o similar. Si no, usamos lo almacenado.
-                    // Por ahora simularemos que si hay token, intentamos recuperar la sesión
-                    // Ideal: const { data } = await api.get('/auth/me'); setUser(data);
-
-                    const savedUser = localStorage.getItem("user");
-                    if (savedUser) {
-                        setUser(JSON.parse(savedUser));
-                    }
+                    // Validar token y obtener datos frescos del usuario
+                    const { data } = await api.get('/auth/me');
+                    setUser(data);
+                    // Actualizar usuario guardado por si acaso
+                    localStorage.setItem("user", JSON.stringify(data));
                 } catch (error) {
                     if (process.env.NODE_ENV !== "production") console.error("Sesión inválida", error);
                     logout();

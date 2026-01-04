@@ -70,56 +70,71 @@ export default function ReportsPage() {
     const [totalStockUnits, setTotalStockUnits] = useState<number>(0);
     const [loading, setLoading] = useState(true);
 
+    // Filtros
+    const [movementsDays, setMovementsDays] = useState(30);
+    const [topProductsDays, setTopProductsDays] = useState(30);
+
+    // Carga inicial de datos estáticos o generales
     useEffect(() => {
-        const fetchReports = async () => {
+        const fetchGlobalData = async () => {
             try {
                 setLoading(true);
-                // Llamadas paralelas a todos los endpoints de reportes
                 const results = await Promise.all([
                     api.get("/reports/inventory-summary"),
                     api.get("/reports/stock-value"),
                     api.get("/reports/low-stock"),
-                    api.get("/reports/top-products?limit=5"),
                     api.get("/reports/by-category"),
-                    api.get("/reports/movements?days=30"),
                     api.get("/reports/by-supplier")
                 ]);
 
                 setSummary(results[0].data);
                 setValueReport(results[1].data);
-
-                // Low stock viene como objeto con products
-                const lowStockData = results[2].data?.products || [];
-                setLowStock(lowStockData);
-
-                // Top products viene como objeto con products
-                const topProductsData = results[3].data?.products || [];
-                setTopProducts(topProductsData);
-
-                // Calcular stock total sumando por categoría
-                const categories = results[4].data?.categories || [];
+                setLowStock(results[2].data?.products || []);
+                
+                const categories = results[3].data?.categories || [];
                 const totalUnits = categories.reduce(
                     (acc: number, c: any) => acc + (c.total_stock || 0),
                     0
                 );
                 setTotalStockUnits(totalUnits);
-
-                // Movimientos
-                setMovementsSummary(results[5].data);
-
-                // Proveedores
-                const suppliersData = results[6].data?.suppliers || [];
-                setSupplierReport(suppliersData);
+                
+                setSupplierReport(results[4].data?.suppliers || []);
 
             } catch (error) {
-                if (process.env.NODE_ENV !== "production") console.error("Error fetching reports", error);
+                console.error("Error fetching global reports", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchReports();
+        fetchGlobalData();
     }, []);
+
+    // Carga de movimientos con filtro
+    useEffect(() => {
+        const fetchMovements = async () => {
+            try {
+                const { data } = await api.get(`/reports/movements?days=${movementsDays}`);
+                setMovementsSummary(data);
+            } catch (error) {
+                console.error("Error fetching movements", error);
+            }
+        };
+        fetchMovements();
+    }, [movementsDays]);
+
+    // Carga de top productos con filtro
+    useEffect(() => {
+        const fetchTopProducts = async () => {
+            try {
+                const { data } = await api.get(`/reports/top-products?limit=5&days=${topProductsDays}`);
+                setTopProducts(data.products || []);
+            } catch (error) {
+                console.error("Error fetching top products", error);
+            }
+        };
+        fetchTopProducts();
+    }, [topProductsDays]);
 
     const Card = ({ title, value, subtext, color }: any) => (
         <div className="card" style={{ borderTop: `4px solid ${color}` }}>
@@ -161,9 +176,23 @@ export default function ReportsPage() {
                 />
             </div>
 
-            {/* NUEVA SECCIÓN: Resumen de Movimientos (30 días) */}
+            {/* NUEVA SECCIÓN: Resumen de Movimientos */}
             <div className="card" style={{ marginTop: '2rem' }}>
-                <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '1rem' }}>📊 Flujo de Inventario (Últimos 30 días)</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                    <h2 style={{ fontSize: '1.1rem', fontWeight: 600 }}>📊 Flujo de Inventario</h2>
+                    <select 
+                        className="input"
+                        style={{ width: 'auto', padding: '0.4rem' }}
+                        value={movementsDays}
+                        onChange={(e) => setMovementsDays(Number(e.target.value))}
+                    >
+                        <option value={7}>Últimos 7 días</option>
+                        <option value={15}>Últimos 15 días</option>
+                        <option value={30}>Últimos 30 días</option>
+                        <option value={60}>Últimos 60 días</option>
+                        <option value={90}>Últimos 90 días</option>
+                    </select>
+                </div>
                 {movementsSummary ? (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', textAlign: 'center' }}>
                         <div style={{ padding: '1rem', backgroundColor: '#f0fdf4', borderRadius: '8px' }}>
@@ -189,15 +218,27 @@ export default function ReportsPage() {
 
                 {/* TOP PRODUCTOS */}
                 <div className="card">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                         <h2 style={{ fontSize: '1.1rem', fontWeight: 600 }}>🔥 Productos Más Movidos</h2>
-                        <button
-                            className="btn"
-                            style={{ fontSize: '0.8rem', border: '1px solid var(--text-secondary)', color: 'var(--text-primary)' }}
-                            onClick={() => downloadCSV(topProducts, 'top_productos')}
-                        >
-                            📥 Exportar
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <select 
+                                className="input"
+                                style={{ width: 'auto', padding: '0.3rem', fontSize: '0.8rem' }}
+                                value={topProductsDays}
+                                onChange={(e) => setTopProductsDays(Number(e.target.value))}
+                            >
+                                <option value={7}>7 días</option>
+                                <option value={30}>30 días</option>
+                                <option value={90}>90 días</option>
+                            </select>
+                            <button
+                                className="btn"
+                                style={{ fontSize: '0.8rem', border: '1px solid var(--text-secondary)', color: 'var(--text-primary)' }}
+                                onClick={() => downloadCSV(topProducts, 'top_productos')}
+                            >
+                                📥
+                            </button>
+                        </div>
                     </div>
                     <div className={styles.tableContainer}>
                         <table className={styles.table}>

@@ -38,6 +38,25 @@ class Supplier(Base):
 
     # Relación con productos
     products = relationship("Product", back_populates="supplier")
+    # Deuda con el proveedor
+    balance = Column(Float, default=0.0)
+
+
+class Client(Base):
+    """Modelo de Cliente"""
+    __tablename__ = "clients"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(200), nullable=False, index=True)
+    email = Column(String(100))
+    phone = Column(String(20))
+    address = Column(String(500))
+    identification = Column(String(50), unique=True) # DNI, RUC, etc.
+    balance = Column(Float, default=0.0) # Saldo a favor o deuda
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relación con ventas
+    orders = relationship("Order", back_populates="client")
 
 
 class Product(Base):
@@ -83,12 +102,15 @@ class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=True)
+    table_id = Column(Integer, ForeignKey("tables.id"), nullable=True)
     total_amount = Column(Float, nullable=False)
     payment_method = Column(String(50), nullable=False) # efectivo, tarjeta, etc.
-    status = Column(String(20), default="completed") # completed, cancelled
+    status = Column(String(20), default="completed") # completed, cancelled, pending (para créditos)
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    # Relación con items
+    # Relaciones
+    client = relationship("Client", back_populates="orders")
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
 
 

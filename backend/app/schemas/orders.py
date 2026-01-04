@@ -17,10 +17,12 @@ class OrderCreateItem(BaseModel):
 
 class OrderCreate(BaseModel):
     payment_method: str
+    client_id: Optional[int] = None
     items: List[OrderCreateItem]
 
 class OrderResponse(BaseModel):
     id: int
+    client_id: Optional[int] = None
     total_amount: float
     payment_method: str
     status: str

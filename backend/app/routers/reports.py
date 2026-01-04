@@ -18,8 +18,13 @@ from app.schemas.reports import (
     CategoryReport,
     SupplierInventory,
     SupplierReport,
-    SalesSummary
+    SalesSummary,
+    FinancialBalance,
+    DebtReport,
+    DebtItem
 )
+from app.models.financial import Expense
+from app.models.inventory import Client, Order
 
 router = APIRouter(
     prefix="/reports",
@@ -305,3 +310,36 @@ def get_sales_summary(db: Session = Depends(get_db)):
         today_orders=today_orders,
         average_order_value=average_order_value
     )
+
+@router.get("/financial-balance", response_model=FinancialBalance)
+def get_financial_balance(
+    days: Optional[int] = Query(30, ge=1, le=365),
+    db: Session = Depends(get_db)
+):
+    """Resumen de ingresos vs egresos"""
+    period_start = datetime.utcnow() - timedelta(days=days)
+    
+    revenue = db.query(func.sum(Order.total_amount)).filter(Order.created_at >= period_start).scalar() or 0.0
+    expenses = db.query(func.sum(Expense.amount)).filter(Expense.date >= period_start).scalar() or 0.0
+    
+    return FinancialBalance(
+        total_revenue=revenue,
+        total_expenses=expenses,
+        net_profit=revenue - expenses,
+        period_start=period_start,
+        period_end=datetime.utcnow()
+    )
+
+@router.get("/debts/clients", response_model=DebtReport)
+def get_client_debts(db: Session = Depends(get_db)):
+    """Clientes que deben dinero (balance < 0)"""
+    clients = db.query(Client).filter(Client.balance < 0).all()
+    items = [DebtItem(id=c.id, name=c.name, balance=c.balance) for c in clients]
+    return DebtReport(items=items, total_debt=sum(c.balance for c in clients))
+
+@router.get("/debts/suppliers", response_model=DebtReport)
+def get_supplier_debts(db: Session = Depends(get_db)):
+    """Dinero que debemos a proveedores (balance < 0)"""
+    suppliers = db.query(Supplier).filter(Supplier.balance < 0).all()
+    items = [DebtItem(id=s.id, name=s.name, balance=s.balance) for s in suppliers]
+    return DebtReport(items=items, total_debt=sum(s.balance for s in suppliers))

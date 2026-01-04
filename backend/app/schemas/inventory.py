@@ -54,10 +54,44 @@ class SupplierUpdate(BaseModel):
     email: Optional[EmailStr] = None
     phone: Optional[str] = Field(None, max_length=20)
     address: Optional[str] = Field(None, max_length=500)
+    balance: Optional[float] = None
 
 
 class Supplier(SupplierBase):
     id: int
+    balance: float
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ============ CLIENT SCHEMAS ============
+
+class ClientBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=200)
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = Field(None, max_length=20)
+    address: Optional[str] = Field(None, max_length=500)
+    identification: Optional[str] = Field(None, max_length=50)
+
+
+class ClientCreate(ClientBase):
+    pass
+
+
+class ClientUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=200)
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = Field(None, max_length=20)
+    address: Optional[str] = Field(None, max_length=500)
+    identification: Optional[str] = Field(None, max_length=50)
+    balance: Optional[float] = None
+
+
+class Client(ClientBase):
+    id: int
+    balance: float
     created_at: datetime
 
     class Config:
