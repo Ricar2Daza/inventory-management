@@ -5,7 +5,6 @@ import api from "@/services/api";
 import styles from "../products/page.module.css";
 import { downloadCSV } from "@/services/exportUtils";
 
-// Interfaces para los reportes
 interface InventorySummary {
     total_products: number;
     total_categories: number;
@@ -59,6 +58,25 @@ interface SupplierInventory {
     total_value: number;
 }
 
+interface FinancialBalance {
+    total_revenue: number;
+    total_expenses: number;
+    net_profit: number;
+    period_start: string;
+    period_end: string;
+}
+
+interface DebtItem {
+    id: number;
+    name: string;
+    balance: number;
+}
+
+interface DebtReport {
+    items: DebtItem[];
+    total_debt: number;
+}
+
 export default function ReportsPage() {
     const [summary, setSummary] = useState<InventorySummary | null>(null);
     const [valueReport, setValueReport] = useState<StockValue | null>(null);
@@ -70,11 +88,14 @@ export default function ReportsPage() {
     const [totalStockUnits, setTotalStockUnits] = useState<number>(0);
     const [loading, setLoading] = useState(true);
 
-    // Filtros
     const [movementsDays, setMovementsDays] = useState(30);
     const [topProductsDays, setTopProductsDays] = useState(30);
+    const [financialDays, setFinancialDays] = useState(30);
 
-    // Carga inicial de datos estáticos o generales
+    const [financialBalance, setFinancialBalance] = useState<FinancialBalance | null>(null);
+    const [clientDebtReport, setClientDebtReport] = useState<DebtReport | null>(null);
+    const [supplierDebtReport, setSupplierDebtReport] = useState<DebtReport | null>(null);
+
     useEffect(() => {
         const fetchGlobalData = async () => {
             try {
@@ -84,7 +105,9 @@ export default function ReportsPage() {
                     api.get("/reports/stock-value"),
                     api.get("/reports/low-stock"),
                     api.get("/reports/by-category"),
-                    api.get("/reports/by-supplier")
+                    api.get("/reports/by-supplier"),
+                    api.get("/reports/debts/clients"),
+                    api.get("/reports/debts/suppliers")
                 ]);
 
                 setSummary(results[0].data);
@@ -99,6 +122,8 @@ export default function ReportsPage() {
                 setTotalStockUnits(totalUnits);
                 
                 setSupplierReport(results[4].data?.suppliers || []);
+                setClientDebtReport(results[5].data);
+                setSupplierDebtReport(results[6].data);
 
             } catch (error) {
                 console.error("Error fetching global reports", error);
@@ -110,7 +135,6 @@ export default function ReportsPage() {
         fetchGlobalData();
     }, []);
 
-    // Carga de movimientos con filtro
     useEffect(() => {
         const fetchMovements = async () => {
             try {
@@ -123,7 +147,6 @@ export default function ReportsPage() {
         fetchMovements();
     }, [movementsDays]);
 
-    // Carga de top productos con filtro
     useEffect(() => {
         const fetchTopProducts = async () => {
             try {
@@ -136,11 +159,22 @@ export default function ReportsPage() {
         fetchTopProducts();
     }, [topProductsDays]);
 
+    useEffect(() => {
+        const fetchFinancialBalance = async () => {
+            try {
+                const { data } = await api.get(`/reports/financial-balance?days=${financialDays}`);
+                setFinancialBalance(data);
+            } catch (error) {
+                console.error("Error fetching financial balance", error);
+            }
+        };
+        fetchFinancialBalance();
+    }, [financialDays]);
+
     return (
         <div className={styles.container}>
             <h1 className={styles.title}>Reportes y Análisis</h1>
 
-            {/* KPI CARDS */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
                 <div className="card" style={{ textAlign: 'center', padding: '1rem' }}>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>Valor Inventario</p>
@@ -172,7 +206,6 @@ export default function ReportsPage() {
                 </div>
             </div>
 
-            {/* NUEVA SECCIÓN: Resumen de Movimientos */}
             <div className="card" style={{ marginTop: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
                     <h2 style={{ fontSize: '1.1rem', fontWeight: 600 }}>📊 Flujo de Inventario</h2>
@@ -209,10 +242,54 @@ export default function ReportsPage() {
                 ) : <p>Cargando datos de flujo...</p>}
             </div>
 
+            <div className="card" style={{ marginTop: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                    <h2 style={{ fontSize: '1.1rem', fontWeight: 600 }}>💰 Resumen Financiero</h2>
+                    <select
+                        className="input"
+                        style={{ width: 'auto', padding: '0.4rem' }}
+                        value={financialDays}
+                        onChange={(e) => setFinancialDays(Number(e.target.value))}
+                    >
+                        <option value={7}>Últimos 7 días</option>
+                        <option value={30}>Últimos 30 días</option>
+                        <option value={60}>Últimos 60 días</option>
+                        <option value={90}>Últimos 90 días</option>
+                    </select>
+                </div>
+                {financialBalance ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', textAlign: 'center' }}>
+                        <div style={{ padding: '1rem', backgroundColor: '#eff6ff', borderRadius: '8px' }}>
+                            <p style={{ fontSize: '0.875rem', color: '#1d4ed8' }}>Ingresos</p>
+                            <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1d4ed8' }}>
+                                ${financialBalance.total_revenue.toLocaleString()}
+                            </p>
+                        </div>
+                        <div style={{ padding: '1rem', backgroundColor: '#fef2f2', borderRadius: '8px' }}>
+                            <p style={{ fontSize: '0.875rem', color: '#b91c1c' }}>Gastos</p>
+                            <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#b91c1c' }}>
+                                ${financialBalance.total_expenses.toLocaleString()}
+                            </p>
+                        </div>
+                        <div style={{ padding: '1rem', backgroundColor: '#f0fdf4', borderRadius: '8px' }}>
+                            <p style={{ fontSize: '0.875rem', color: (financialBalance.net_profit ?? 0) >= 0 ? '#166534' : '#b91c1c' }}>Resultado</p>
+                            <p
+                                style={{
+                                    fontSize: '1.5rem',
+                                    fontWeight: 700,
+                                    color: (financialBalance.net_profit ?? 0) >= 0 ? '#16a34a' : '#b91c1c'
+                                }}
+                            >
+                                ${financialBalance.net_profit.toLocaleString()}
+                            </p>
+                        </div>
+                    </div>
+                ) : <p>Cargando datos financieros...</p>}
+            </div>
+
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem', marginTop: '1rem' }}>
 
-                {/* TOP PRODUCTOS */}
                 <div className="card">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                         <h2 style={{ fontSize: '1.1rem', fontWeight: 600 }}>🔥 Productos Más Movidos</h2>
@@ -263,7 +340,6 @@ export default function ReportsPage() {
                     </div>
                 </div>
 
-                {/* ALERTA STOCK BAJO */}
                 <div className="card">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                         <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--error-color)' }}>⚠️ Alerta de Reabastecimiento</h2>
@@ -302,7 +378,6 @@ export default function ReportsPage() {
 
             </div>
 
-            {/* NUEVA SECCIÓN: Inventario por Proveedor */}
             <div className="card" style={{ marginTop: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                     <h2 style={{ fontSize: '1.1rem', fontWeight: 600 }}>🏭 Inventario por Proveedor</h2>
@@ -337,6 +412,88 @@ export default function ReportsPage() {
                             }
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <div className="card" style={{ marginTop: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                    <h2 style={{ fontSize: '1.1rem', fontWeight: 600 }}>📒 Deudas y Créditos</h2>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <button
+                            className="btn"
+                            style={{ fontSize: '0.8rem', border: '1px solid var(--text-secondary)', color: 'var(--text-primary)' }}
+                            onClick={() => clientDebtReport && downloadCSV(clientDebtReport.items, "deudas_clientes")}
+                        >
+                            📥 Clientes
+                        </button>
+                        <button
+                            className="btn"
+                            style={{ fontSize: '0.8rem', border: '1px solid var(--text-secondary)', color: 'var(--text-primary)' }}
+                            onClick={() => supplierDebtReport && downloadCSV(supplierDebtReport.items, "deudas_proveedores")}
+                        >
+                            📥 Proveedores
+                        </button>
+                    </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                    <div>
+                        <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.5rem' }}>Clientes con saldo pendiente</h3>
+                        <div className={styles.tableContainer}>
+                            <table className={styles.table}>
+                                <thead>
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th>Saldo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {clientDebtReport && clientDebtReport.items.length > 0 ? (
+                                        clientDebtReport.items.map((item) => (
+                                            <tr key={item.id}>
+                                                <td>{item.name}</td>
+                                                <td style={{ color: 'var(--error-color)', fontWeight: 600 }}>
+                                                    ${Math.abs(item.balance).toLocaleString()}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={2}>Sin deudas registradas.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.5rem' }}>Proveedores por pagar</h3>
+                        <div className={styles.tableContainer}>
+                            <table className={styles.table}>
+                                <thead>
+                                    <tr>
+                                        <th>Proveedor</th>
+                                        <th>Saldo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {supplierDebtReport && supplierDebtReport.items.length > 0 ? (
+                                        supplierDebtReport.items.map((item) => (
+                                            <tr key={item.id}>
+                                                <td>{item.name}</td>
+                                                <td style={{ color: 'var(--error-color)', fontWeight: 600 }}>
+                                                    ${Math.abs(item.balance).toLocaleString()}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={2}>Sin pendientes con proveedores.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
