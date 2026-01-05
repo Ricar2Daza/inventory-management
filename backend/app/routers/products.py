@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
 
 from app.database import get_db
@@ -174,8 +175,15 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
             detail=f"Producto con ID {product_id} no encontrado"
         )
     
-    db.delete(db_product)
-    db.commit()
+    try:
+        db.delete(db_product)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede eliminar el producto porque tiene movimientos o ventas asociadas."
+        )
     return None
 
 

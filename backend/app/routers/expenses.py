@@ -6,10 +6,12 @@ import datetime
 from app.database import get_db
 from app.models.financial import Expense
 from app.schemas.financial import Expense as ExpenseSchema, ExpenseCreate, ExpenseUpdate
+from app.auth import require_role
 
 router = APIRouter(
     prefix="/expenses",
-    tags=["expenses"]
+    tags=["expenses"],
+    dependencies=[Depends(require_role("manager"))]
 )
 
 @router.get("/", response_model=List[ExpenseSchema])

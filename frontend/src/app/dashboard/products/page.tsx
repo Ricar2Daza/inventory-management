@@ -94,9 +94,10 @@ export default function ProductsPage() {
         try {
             await api.delete(`/products/${id}`);
             fetchProducts(); // Recargar
-        } catch (error) {
+        } catch (error: any) {
             if (process.env.NODE_ENV !== "production") console.error("Error deleting product", error);
-            alert("No se pudo eliminar el producto");
+            const message = error.response?.data?.detail || "No se pudo eliminar el producto";
+            alert(`Error: ${message}`);
         }
     };
 

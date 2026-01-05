@@ -25,10 +25,12 @@ from app.schemas.reports import (
 )
 from app.models.financial import Expense
 from app.models.inventory import Client, Order
+from app.auth import require_role
 
 router = APIRouter(
     prefix="/reports",
-    tags=["reports"]
+    tags=["reports"],
+    dependencies=[Depends(require_role("manager"))]
 )
 
 

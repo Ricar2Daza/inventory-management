@@ -132,6 +132,8 @@ class Product(ProductBase):
     updated_at: datetime
     category: Optional[Category] = None
     supplier: Optional[Supplier] = None
+    category_id: Optional[int] = None
+    supplier_id: Optional[int] = None
 
     class Config:
         from_attributes = True
