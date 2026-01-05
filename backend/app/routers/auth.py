@@ -33,9 +33,13 @@ router = APIRouter(
 
 
 @router.post("/register", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
-def register(user: UserCreate, db: Session = Depends(get_db)):
+def register(
+    user: UserCreate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
+):
     """
-    Registrar un nuevo usuario
+    Registrar un nuevo usuario - Requiere rol Admin
     """
     logger.info(f"Intento de registro de usuario: {user.username}")
     
@@ -75,11 +79,13 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     """
     Login con OAuth2 (para Swagger UI)
     """
+    print(f"DEBUG: Intento de login para {form_data.username}")
     logger.info(f"Intento de login: {form_data.username}")
     
     user = db.query(User).filter(User.username == form_data.username).first()
     
     if not user or not verify_password(form_data.password, user.hashed_password):
+        print("DEBUG: Login fallido (credenciales)")
         logger.warning(f"Intento de login fallido: {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -88,18 +94,26 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         )
     
     if not user.is_active:
+        print("DEBUG: Usuario inactivo")
         logger.warning(f"Intento de login con usuario inactivo: {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Usuario inactivo"
         )
     
+    print("DEBUG: Creando access token")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-    
-    logger.info(f"Login exitoso: {user.username} (ID: {user.id})")
+    try:
+        access_token = create_access_token(
+            data={"sub": user.username}, expires_delta=access_token_expires
+        )
+        print("DEBUG: Token creado exitosamente")
+    except Exception as e:
+        print(f"DEBUG: Error al crear token: {e}")
+        import traceback
+        traceback.print_exc()
+        raise e
+
     return {"access_token": access_token, "token_type": "bearer"}
 
 

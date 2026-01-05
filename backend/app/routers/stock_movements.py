@@ -7,6 +7,8 @@ from app.database import get_db
 from app.models.inventory import StockMovement, Product, MovementType
 from app.schemas.inventory import StockMovement as StockMovementSchema, StockMovementCreate
 from app.utils.notifications import check_and_create_low_stock_notification
+from app.auth import get_current_active_user, require_role
+from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +19,12 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[StockMovementSchema])
-def get_stock_movements(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_stock_movements(
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     """
     Obtener lista de todos los movimientos de stock
     """
@@ -26,7 +33,11 @@ def get_stock_movements(skip: int = 0, limit: int = 100, db: Session = Depends(g
 
 
 @router.get("/product/{product_id}", response_model=List[StockMovementSchema])
-def get_product_movements(product_id: int, db: Session = Depends(get_db)):
+def get_product_movements(
+    product_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     """
     Obtener movimientos de stock de un producto específico
     """
@@ -46,9 +57,13 @@ def get_product_movements(product_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=StockMovementSchema, status_code=status.HTTP_201_CREATED)
-def create_stock_movement(movement: StockMovementCreate, db: Session = Depends(get_db)):
+def create_stock_movement(
+    movement: StockMovementCreate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("manager"))
+):
     """
-    Registrar un movimiento de stock (entrada o salida)
+    Registrar un movimiento de stock manual (Requiere Manager)
     Actualiza automáticamente el stock del producto
     """
     logger.info(f"Creando movimiento de stock. Producto ID: {movement.product_id}, Tipo: {movement.movement_type.value}, Cantidad: {movement.quantity}")

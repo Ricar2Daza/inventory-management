@@ -1,11 +1,13 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 
 from app.database import get_db
 from app.models.inventory import Order, OrderItem, Product, StockMovement, MovementType, Client
 from app.schemas.orders import OrderCreate, OrderResponse, OrderItemSchema
+from app.auth import get_current_active_user
+from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,11 @@ router = APIRouter(
 )
 
 @router.post("/", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
-def create_order(order_data: OrderCreate, db: Session = Depends(get_db)):
+def create_order(
+    order_data: OrderCreate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     """
     Crear una nueva venta (Orden).
     - Verifica stock suficiente.
@@ -36,9 +42,17 @@ def create_order(order_data: OrderCreate, db: Session = Depends(get_db)):
     total_amount = 0.0
     db_items = []
     
+    # Obtener IDs de productos
+    product_ids = [item.product_id for item in order_data.items]
+    
+    # Consulta masiva de productos (Fix N+1)
+    products = db.query(Product).filter(Product.id.in_(product_ids)).all()
+    products_map = {p.id: p for p in products}
+    
     # 1. Validaciones y Cálculos preliminares
     for item in order_data.items:
-        product = db.query(Product).filter(Product.id == item.product_id).first()
+        product = products_map.get(item.product_id)
+        
         if not product:
             raise HTTPException(status_code=404, detail=f"Producto ID {item.product_id} no encontrado")
         
@@ -77,12 +91,12 @@ def create_order(order_data: OrderCreate, db: Session = Depends(get_db)):
         db.add(new_order)
         db.flush() # Para obtener ID
         
-        for db_item, input_item in zip(db_items, order_data.items):
+        for db_item in db_items:
             db_item.order_id = new_order.id
             db.add(db_item)
             
-            # Actualizar Stock Producto
-            product = db.query(Product).filter(Product.id == db_item.product_id).first()
+            # Actualizar Stock Producto (usando el objeto ya cargado en memoria)
+            product = products_map[db_item.product_id]
             product.current_stock -= db_item.quantity
             
             # Registrar Movimiento
@@ -110,35 +124,50 @@ def create_order(order_data: OrderCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error al procesar la venta: {str(e)}")
 
 @router.get("/", response_model=List[OrderResponse])
-def get_orders(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_orders(
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     """Historial de ventas"""
-    orders = db.query(Order).order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
-    # Enriquecer items con nombre de producto para el frontend
-    for order in orders:
-        for item in order.items:
-            # SQLAlchemy ya trae el producto por la relación, pero el schema espera product_name
-            # Aseguramos que el schema lo reciba mapeando explícitamente si es necesario, 
-            # pero Pydantic `from_attributes` suele manejarlo si la propiedad existe.
-            # Aquí inyectamos el nombre si no viene directo.
-            item.product_name = item.product.name if item.product else "Desconocido"
-            
+    orders = db.query(Order).options(
+        joinedload(Order.items).joinedload(OrderItem.product),
+        joinedload(Order.client)
+    ).order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
+    
     return orders
 
 @router.get("/{order_id}", response_model=OrderResponse)
-def get_order(order_id: int, db: Session = Depends(get_db)):
-    order = db.query(Order).filter(Order.id == order_id).first()
+def get_order(
+    order_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    order = db.query(Order).options(
+        joinedload(Order.items).joinedload(OrderItem.product),
+        joinedload(Order.client)
+    ).filter(Order.id == order_id).first()
+    
     if not order:
         raise HTTPException(status_code=404, detail="Orden no encontrada")
-    
-    for item in order.items:
-        item.product_name = item.product.name if item.product else "Desconocido"
-        
+            
+    return order
+
 @router.get("/{order_id}/receipt")
-def generate_order_receipt(order_id: int, db: Session = Depends(get_db)):
+def generate_order_receipt(
+    order_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     """
     Generar ticket PDF para una venta
     """
-    order = db.query(Order).filter(Order.id == order_id).first()
+    order = db.query(Order).options(
+        joinedload(Order.items).joinedload(OrderItem.product),
+        joinedload(Order.client)
+    ).filter(Order.id == order_id).first()
+    
     if not order:
         raise HTTPException(status_code=404, detail="Orden no encontrada")
 

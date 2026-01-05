@@ -28,7 +28,7 @@ def create_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
     """Registrar un nuevo gasto"""
     db_expense = Expense(**expense.model_dump())
     if not db_expense.date:
-        db_expense.date = datetime.datetime.utcnow()
+        db_expense.date = datetime.datetime.now(datetime.timezone.utc)
         
     db.add(db_expense)
     db.commit()

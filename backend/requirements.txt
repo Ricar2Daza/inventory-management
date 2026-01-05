@@ -13,3 +13,5 @@ httpx
 qrcode
 reportlab
 alembic
+aiosqlite
+email-validator

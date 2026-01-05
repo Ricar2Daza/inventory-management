@@ -5,6 +5,8 @@ from typing import List
 from app.database import get_db
 from app.models.inventory import Category
 from app.schemas.inventory import Category as CategorySchema, CategoryCreate, CategoryUpdate
+from app.auth import get_current_active_user, require_role
+from app.models.user import User
 
 router = APIRouter(
     prefix="/categories",
@@ -13,7 +15,12 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[CategorySchema])
-def get_categories(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_categories(
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     """
     Obtener lista de todas las categorías
     """
@@ -22,7 +29,11 @@ def get_categories(skip: int = 0, limit: int = 100, db: Session = Depends(get_db
 
 
 @router.get("/{category_id}", response_model=CategorySchema)
-def get_category(category_id: int, db: Session = Depends(get_db)):
+def get_category(
+    category_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     """
     Obtener una categoría por ID
     """
@@ -36,9 +47,13 @@ def get_category(category_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=CategorySchema, status_code=status.HTTP_201_CREATED)
-def create_category(category: CategoryCreate, db: Session = Depends(get_db)):
+def create_category(
+    category: CategoryCreate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
+):
     """
-    Crear una nueva categoría
+    Crear una nueva categoría (Requiere Admin)
     """
     # Verificar si ya existe una categoría con ese nombre
     existing = db.query(Category).filter(Category.name == category.name).first()
@@ -56,9 +71,14 @@ def create_category(category: CategoryCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{category_id}", response_model=CategorySchema)
-def update_category(category_id: int, category: CategoryUpdate, db: Session = Depends(get_db)):
+def update_category(
+    category_id: int, 
+    category: CategoryUpdate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
+):
     """
-    Actualizar una categoría existente
+    Actualizar una categoría existente (Requiere Admin)
     """
     db_category = db.query(Category).filter(Category.id == category_id).first()
     if not db_category:
@@ -87,9 +107,13 @@ def update_category(category_id: int, category: CategoryUpdate, db: Session = De
 
 
 @router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_category(category_id: int, db: Session = Depends(get_db)):
+def delete_category(
+    category_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
+):
     """
-    Eliminar una categoría
+    Eliminar una categoría (Requiere Admin)
     """
     db_category = db.query(Category).filter(Category.id == category_id).first()
     if not db_category:
