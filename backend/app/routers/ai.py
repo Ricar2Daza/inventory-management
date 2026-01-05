@@ -40,7 +40,7 @@ class AIReportResponse(BaseModel):
 
 
 @router.post("/report-summary", response_model=AIReportResponse)
-def get_report_ai_explanation(
+async def get_report_ai_explanation(
     payload: AIReportRequest,
     db: Session = Depends(get_db),
 ):
@@ -62,9 +62,7 @@ def get_report_ai_explanation(
         "inventory_summary": inventory_summary.model_dump(),
         "stock_value": stock_value.model_dump(),
         "movements_30_days": movements.model_dump(),
-        "top_products_30_days": [
-            p.model_dump() for p in top_products.products
-        ],
+        "top_products_30_days": [p.model_dump() for p in top_products.products],
         "financial_balance_30_days": financial_balance.model_dump(),
         "client_debts": client_debts.model_dump(),
         "supplier_debts": supplier_debts.model_dump(),
@@ -100,25 +98,35 @@ def get_report_ai_explanation(
     ]
 
     try:
-        response = httpx.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {settings.GROQ_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": settings.GROQ_MODEL or "llama-3.3-70b-specdec",
-                "messages": messages,
-                "temperature": 0.3,
-            },
-            timeout=30.0,
-        )
-        response.raise_for_status()
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {settings.GROQ_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": settings.GROQ_MODEL or "llama-3.3-70b-specdec",
+                    "messages": messages,
+                    "temperature": 0.3,
+                },
+            )
     except httpx.HTTPError as exc:
-        logger.error("Error al llamar al servicio Groq: %s", exc)
+        logger.error("Error de red al llamar a Groq: %r", exc)
         raise HTTPException(
             status_code=503,
-            detail="No se pudo contactar al servicio de IA.",
+            detail=f"No se pudo contactar al servicio de IA: {exc}",
+        )
+
+    if response.status_code >= 400:
+        logger.error(
+            "Groq devolvió error %s: %s",
+            response.status_code,
+            response.text,
+        )
+        raise HTTPException(
+            status_code=503,
+            detail=f"Error del servicio de IA (Groq): {response.status_code}",
         )
 
     data = response.json()
@@ -133,4 +141,3 @@ def get_report_ai_explanation(
         )
 
     return AIReportResponse(answer=content.strip())
-

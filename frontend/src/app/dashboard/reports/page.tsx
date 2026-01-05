@@ -188,12 +188,25 @@ export default function ReportsPage() {
             setAiAnswer(data.answer);
         } catch (error: any) {
             console.error("Error al consultar la IA", error);
-            const detail = error?.response?.data?.detail;
-            setAiError(
-                typeof detail === "string"
-                    ? detail
-                    : "No se pudo obtener una respuesta de la IA."
-            );
+            const responseData = error?.response?.data;
+            const detail = responseData?.detail;
+            if (typeof detail === "string") {
+                setAiError(detail);
+            } else if (detail && typeof detail === "object") {
+                try {
+                    setAiError(JSON.stringify(detail, null, 2));
+                } catch {
+                    setAiError("No se pudo obtener una respuesta de la IA.");
+                }
+            } else if (responseData) {
+                try {
+                    setAiError(JSON.stringify(responseData, null, 2));
+                } catch {
+                    setAiError("No se pudo obtener una respuesta de la IA.");
+                }
+            } else {
+                setAiError("No se pudo obtener una respuesta de la IA.");
+            }
         } finally {
             setAiLoading(false);
         }
