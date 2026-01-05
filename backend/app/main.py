@@ -6,8 +6,21 @@ import logging
 from app.logging_config import setup_logging
 from app.database import engine, Base
 from app.config import settings
-from app.routers import categories, suppliers, products, stock_movements, auth, reports, notifications, warehouses, orders, clients, expenses
-from app.models import inventory, financial, user, warehouse, notification, restaurant # Asegurar que SQLALchemy cargue todos los modelos
+from app.routers import (
+    categories,
+    suppliers,
+    products,
+    stock_movements,
+    auth,
+    reports,
+    notifications,
+    warehouses,
+    orders,
+    clients,
+    expenses,
+    ai,
+)
+from app.models import inventory, financial, user, warehouse, notification, restaurant
 
 # Configurar logging
 setup_logging()
@@ -46,7 +59,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Incluir routers
 app.include_router(auth.router)
 app.include_router(products.router)
 app.include_router(categories.router)
@@ -58,6 +70,7 @@ app.include_router(warehouses.router)
 app.include_router(orders.router)
 app.include_router(clients.router)
 app.include_router(expenses.router)
+app.include_router(ai.router)
 
 
 @app.get("/", tags=["raíz"])
