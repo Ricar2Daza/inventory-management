@@ -81,13 +81,37 @@ export default function POSPage() {
                     alert("Stock insuficiente.");
                     return prev;
                 }
-                return prev.map(item => item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+                return prev.map(item =>
+                    item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+                );
             }
             return [...prev, { product, quantity: 1 }];
         });
     };
 
-    const cartTotal = cart.reduce((sum, item) => sum + (item.product.unit_price * item.quantity), 0);
+    const updateCartQuantity = (productId: number, delta: number) => {
+        setCart(prev =>
+            prev.reduce<CartItem[]>((acc, item) => {
+                if (item.product.id !== productId) {
+                    acc.push(item);
+                    return acc;
+                }
+                const newQuantity = item.quantity + delta;
+                if (delta > 0 && newQuantity > item.product.current_stock) {
+                    alert("Stock insuficiente.");
+                    acc.push(item);
+                    return acc;
+                }
+                if (newQuantity <= 0) {
+                    return acc;
+                }
+                acc.push({ ...item, quantity: newQuantity });
+                return acc;
+            }, [])
+        );
+    };
+
+    const cartTotal = cart.reduce((sum, item) => sum + item.product.unit_price * item.quantity, 0);
 
     const handleCheckout = async () => {
         if (cart.length === 0) return;
@@ -166,12 +190,67 @@ export default function POSPage() {
 
                 <div style={{ flex: 1, overflowY: 'auto' }}>
                     {cart.map(item => (
-                        <div key={item.product.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--border-color)' }}>
+                        <div
+                            key={item.product.id}
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '0.5rem 0',
+                                borderBottom: '1px solid var(--border-color)'
+                            }}
+                        >
                             <div style={{ fontSize: '0.9rem' }}>
                                 <div>{item.product.name}</div>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>${item.product.unit_price} x {item.quantity}</div>
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.4rem',
+                                        fontSize: '0.75rem',
+                                        color: 'var(--text-secondary)'
+                                    }}
+                                >
+                                    <span>${item.product.unit_price}</span>
+                                    <span>x</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => updateCartQuantity(item.product.id, -1)}
+                                        style={{
+                                            width: '1.5rem',
+                                            height: '1.5rem',
+                                            borderRadius: '999px',
+                                            border: '1px solid var(--border-color)',
+                                            background: 'transparent',
+                                            cursor: 'pointer',
+                                            lineHeight: 1
+                                        }}
+                                    >
+                                        -
+                                    </button>
+                                    <span style={{ minWidth: '1.5rem', textAlign: 'center' }}>
+                                        {item.quantity}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => updateCartQuantity(item.product.id, 1)}
+                                        style={{
+                                            width: '1.5rem',
+                                            height: '1.5rem',
+                                            borderRadius: '999px',
+                                            border: '1px solid var(--border-color)',
+                                            background: 'transparent',
+                                            cursor: 'pointer',
+                                            lineHeight: 1
+                                        }}
+                                    >
+                                        +
+                                    </button>
+                                </div>
                             </div>
-                            <div style={{ fontWeight: 700 }}>${(item.product.unit_price * item.quantity).toFixed(2)}</div>
+                            <div style={{ fontWeight: 700 }}>
+                                ${(item.product.unit_price * item.quantity).toFixed(2)}
+                            </div>
                         </div>
                     ))}
                 </div>
