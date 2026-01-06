@@ -6,6 +6,8 @@ from app.database import get_db
 from app.models.inventory import Supplier
 from app.schemas.inventory import Supplier as SupplierSchema, SupplierCreate, SupplierUpdate
 from app.utils.search import search_query
+from app.auth import get_current_active_user, require_role
+from app.models.user import User
 
 router = APIRouter(
     prefix="/suppliers",
@@ -14,7 +16,12 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[SupplierSchema])
-def get_suppliers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_suppliers(
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     """
     Obtener lista de todos los proveedores
     """
@@ -25,7 +32,8 @@ def get_suppliers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 @router.get("/search", response_model=List[SupplierSchema])
 def search_suppliers(
     q: str = Query(..., min_length=1, description="Término de búsqueda"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
 ):
     """
     Buscar proveedores por nombre, contacto o email
@@ -37,7 +45,11 @@ def search_suppliers(
 
 
 @router.get("/{supplier_id}", response_model=SupplierSchema)
-def get_supplier(supplier_id: int, db: Session = Depends(get_db)):
+def get_supplier(
+    supplier_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     """
     Obtener un proveedor por ID
     """
@@ -51,9 +63,13 @@ def get_supplier(supplier_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=SupplierSchema, status_code=status.HTTP_201_CREATED)
-def create_supplier(supplier: SupplierCreate, db: Session = Depends(get_db)):
+def create_supplier(
+    supplier: SupplierCreate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
+):
     """
-    Crear un nuevo proveedor
+    Crear un nuevo proveedor (Requiere Admin)
     """
     db_supplier = Supplier(**supplier.model_dump())
     db.add(db_supplier)
@@ -63,9 +79,14 @@ def create_supplier(supplier: SupplierCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{supplier_id}", response_model=SupplierSchema)
-def update_supplier(supplier_id: int, supplier: SupplierUpdate, db: Session = Depends(get_db)):
+def update_supplier(
+    supplier_id: int, 
+    supplier: SupplierUpdate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
+):
     """
-    Actualizar un proveedor existente
+    Actualizar un proveedor existente (Requiere Admin)
     """
     db_supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
     if not db_supplier:
@@ -85,9 +106,13 @@ def update_supplier(supplier_id: int, supplier: SupplierUpdate, db: Session = De
 
 
 @router.delete("/{supplier_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_supplier(supplier_id: int, db: Session = Depends(get_db)):
+def delete_supplier(
+    supplier_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
+):
     """
-    Eliminar un proveedor
+    Eliminar un proveedor (Requiere Admin)
     """
     db_supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
     if not db_supplier:

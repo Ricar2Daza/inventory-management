@@ -147,6 +147,7 @@ class SupplierReport(BaseModel):
 
     class Config:
         from_attributes = True
+
 # ============ SALES REPORT SCHEMAS ============
 
 class SalesSummary(BaseModel):
@@ -156,6 +157,34 @@ class SalesSummary(BaseModel):
     total_orders: int
     today_orders: int
     average_order_value: float
+
+    class Config:
+        from_attributes = True
+
+# ============ FINANCIAL REPORT SCHEMAS ============
+
+class FinancialBalance(BaseModel):
+    """Balance general: Ventas vs Gastos"""
+    total_revenue: float
+    total_expenses: float
+    net_profit: float
+    period_start: Optional[datetime] = None
+    period_end: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class DebtItem(BaseModel):
+    """Entidad con deuda"""
+    id: int
+    name: str
+    balance: float
+    last_activity: Optional[datetime] = None
+
+class DebtReport(BaseModel):
+    """Reporte de deudas (Clientes o Proveedores)"""
+    items: List[DebtItem]
+    total_debt: float
 
     class Config:
         from_attributes = True

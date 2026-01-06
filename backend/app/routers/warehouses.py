@@ -5,6 +5,7 @@ from typing import List
 from app.database import get_db
 from app.models.warehouse import Warehouse, ProductWarehouse
 from app.models.inventory import Product
+from app.auth import require_role
 from app.schemas.warehouse import (
     Warehouse as WarehouseSchema,
     WarehouseCreate,
@@ -17,7 +18,8 @@ from app.schemas.warehouse import (
 
 router = APIRouter(
     prefix="/warehouses",
-    tags=["warehouses"]
+    tags=["warehouses"],
+    dependencies=[Depends(require_role("manager"))]
 )
 
 

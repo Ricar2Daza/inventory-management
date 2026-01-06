@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -6,6 +7,8 @@ from typing import List
 
 from app.database import get_db
 from app.models.user import User
+
+logger = logging.getLogger(__name__)
 from app.schemas.user import (
     User as UserSchema,
     UserCreate,
@@ -19,9 +22,9 @@ from app.auth import (
     verify_password,
     create_access_token,
     get_current_active_user,
-    require_role,
-    ACCESS_TOKEN_EXPIRE_MINUTES
+    require_role
 )
+from app.config import settings
 
 router = APIRouter(
     prefix="/auth",
@@ -30,13 +33,20 @@ router = APIRouter(
 
 
 @router.post("/register", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
-def register(user: UserCreate, db: Session = Depends(get_db)):
+def register(
+    user: UserCreate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
+):
     """
-    Registrar un nuevo usuario
+    Registrar un nuevo usuario - Requiere rol Admin
     """
+    logger.info(f"Intento de registro de usuario: {user.username}")
+    
     # Verificar si el username ya existe
     existing_user = db.query(User).filter(User.username == user.username).first()
     if existing_user:
+        logger.warning(f"Intento de registro con username duplicado: {user.username}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"El nombre de usuario '{user.username}' ya está en uso"
@@ -45,6 +55,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     # Verificar si el email ya existe
     existing_email = db.query(User).filter(User.email == user.email).first()
     if existing_email:
+        logger.warning(f"Intento de registro con email duplicado: {user.email}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"El email '{user.email}' ya está registrado"
@@ -59,6 +70,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
     
+    logger.info(f"Usuario registrado exitosamente: {user.username} (ID: {db_user.id})")
     return db_user
 
 
@@ -67,9 +79,14 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     """
     Login con OAuth2 (para Swagger UI)
     """
+    print(f"DEBUG: Intento de login para {form_data.username}")
+    logger.info(f"Intento de login: {form_data.username}")
+    
     user = db.query(User).filter(User.username == form_data.username).first()
     
     if not user or not verify_password(form_data.password, user.hashed_password):
+        print("DEBUG: Login fallido (credenciales)")
+        logger.warning(f"Intento de login fallido: {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuario o contraseña incorrectos",
@@ -77,16 +94,26 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         )
     
     if not user.is_active:
+        print("DEBUG: Usuario inactivo")
+        logger.warning(f"Intento de login con usuario inactivo: {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Usuario inactivo"
         )
     
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-    
+    print("DEBUG: Creando access token")
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    try:
+        access_token = create_access_token(
+            data={"sub": user.username}, expires_delta=access_token_expires
+        )
+        print("DEBUG: Token creado exitosamente")
+    except Exception as e:
+        print(f"DEBUG: Error al crear token: {e}")
+        import traceback
+        traceback.print_exc()
+        raise e
+
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -95,25 +122,30 @@ def login_json(login_data: LoginRequest, db: Session = Depends(get_db)):
     """
     Login con JSON (alternativa al OAuth2)
     """
+    logger.info(f"Intento de login (JSON): {login_data.username}")
+    
     user = db.query(User).filter(User.username == login_data.username).first()
     
     if not user or not verify_password(login_data.password, user.hashed_password):
+        logger.warning(f"Intento de login fallido (JSON): {login_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuario o contraseña incorrectos"
         )
     
     if not user.is_active:
+        logger.warning(f"Intento de login con usuario inactivo (JSON): {login_data.username}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Usuario inactivo"
         )
     
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     
+    logger.info(f"Login exitoso (JSON): {user.username} (ID: {user.id})")
     return {"access_token": access_token, "token_type": "bearer"}
 
 

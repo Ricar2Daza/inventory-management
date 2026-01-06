@@ -258,6 +258,42 @@ pytest tests/ -v
 pytest tests/ -v --cov=app
 ```
 
+## 🔄 Migraciones de Base de Datos (Alembic)
+
+El proyecto usa Alembic para gestionar migraciones de la base de datos.
+
+### Primera vez - Crear migración inicial
+
+```bash
+cd backend
+# Crear migración inicial (solo la primera vez)
+alembic revision --autogenerate -m "Initial migration"
+
+# Aplicar migraciones
+alembic upgrade head
+```
+
+### Comandos comunes
+
+```bash
+# Crear nueva migración automática
+alembic revision --autogenerate -m "Descripción del cambio"
+
+# Aplicar todas las migraciones pendientes
+alembic upgrade head
+
+# Revertir última migración
+alembic downgrade -1
+
+# Ver estado de migraciones
+alembic current
+
+# Ver historial de migraciones
+alembic history
+```
+
+**Nota**: Antes de crear la primera migración, asegúrate de que todos los modelos estén importados en `alembic/env.py`.
+
 ## 📦 Dependencias
 
 - **fastapi** - Framework web
@@ -280,7 +316,18 @@ DATABASE_URL=sqlite:///./inventory.db
 SECRET_KEY=tu_clave_secreta_super_segura_cambiala_en_produccion
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
+ENVIRONMENT=development
 ```
+
+### Sistema de Logging
+
+El sistema genera logs en la carpeta `logs/` con rotación automática:
+- **Archivo**: `logs/app.log` (máximo 10 MB, mantiene 5 archivos de respaldo)
+- **Consola**: Logs también se muestran en la consola
+- **Niveles**: 
+  - Development: DEBUG
+  - Production: INFO
+- Los logs se registran automáticamente para operaciones críticas (autenticación, órdenes, movimientos de stock)
 
 ### Cambiar a PostgreSQL o MySQL
 

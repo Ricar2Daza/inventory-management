@@ -1,0 +1,22 @@
+{
+  "name": "Sistema de Inventario",
+  "short_name": "Inventario",
+  "description": "Gestión de inventario inteligente para tu negocio",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo-octava-capa.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo-octava-capa.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

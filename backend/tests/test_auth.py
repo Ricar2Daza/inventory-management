@@ -2,8 +2,8 @@ import pytest
 from fastapi import status
 
 
-def test_register_user(client):
-    """Test de registro de usuario"""
+def test_register_user(client, admin_headers):
+    """Test de registro de usuario (Requiere Admin)"""
     response = client.post(
         "/auth/register",
         json={
@@ -12,7 +12,8 @@ def test_register_user(client):
             "password": "password123",
             "full_name": "New User",
             "role": "employee"
-        }
+        },
+        headers=admin_headers
     )
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
@@ -21,7 +22,7 @@ def test_register_user(client):
     assert "hashed_password" not in data
 
 
-def test_register_duplicate_username(client, test_user):
+def test_register_duplicate_username(client, test_user, admin_headers):
     """Test de registro con username duplicado"""
     response = client.post(
         "/auth/register",
@@ -29,7 +30,8 @@ def test_register_duplicate_username(client, test_user):
             "username": "testuser",
             "email": "another@example.com",
             "password": "password123"
-        }
+        },
+        headers=admin_headers
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "ya está en uso" in response.json()["detail"]

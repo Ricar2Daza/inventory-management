@@ -24,6 +24,10 @@ export default function ProductsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const { user } = useAuth();
 
+    // Filters
+    const [filterCategory, setFilterCategory] = useState<number | "">("");
+    const [filterSupplier, setFilterSupplier] = useState<number | "">("");
+
     // Modal state for Edit/Create
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -90,9 +94,10 @@ export default function ProductsPage() {
         try {
             await api.delete(`/products/${id}`);
             fetchProducts(); // Recargar
-        } catch (error) {
+        } catch (error: any) {
             if (process.env.NODE_ENV !== "production") console.error("Error deleting product", error);
-            alert("No se pudo eliminar el producto");
+            const message = error.response?.data?.detail || "No se pudo eliminar el producto";
+            alert(`Error: ${message}`);
         }
     };
 
@@ -190,7 +195,7 @@ export default function ProductsPage() {
         <div className={styles.container}>
             <div className={styles.header}>
                 <h1 className={styles.title}>Productos</h1>
-                <div className={styles.controls}>
+                <div className={styles.controls} style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
                     <input
                         type="text"
                         placeholder="Buscar producto..."
@@ -198,15 +203,36 @@ export default function ProductsPage() {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
+                    
+                    <select 
+                        className="input" 
+                        style={{ width: 'auto', padding: '0.5rem' }}
+                        value={filterCategory}
+                        onChange={(e) => setFilterCategory(e.target.value ? Number(e.target.value) : "")}
+                    >
+                        <option value="">Todas las Categorías</option>
+                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+
+                    <select 
+                        className="input" 
+                        style={{ width: 'auto', padding: '0.5rem' }}
+                        value={filterSupplier}
+                        onChange={(e) => setFilterSupplier(e.target.value ? Number(e.target.value) : "")}
+                    >
+                        <option value="">Todos los Proveedores</option>
+                        {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+
                     <button
                         className="btn btn-secondary"
                         style={{ marginRight: '0.5rem' }}
                         onClick={() => setIsImportModalOpen(true)}
                     >
-                        📥 Importar CSV
+                        📥 Importar
                     </button>
                     <button className="btn btn-primary" onClick={() => handleOpenModal()}>
-                        + Nuevo Producto
+                        + Nuevo
                     </button>
                 </div>
             </div>
