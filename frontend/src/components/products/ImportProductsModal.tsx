@@ -66,11 +66,12 @@ export default function ImportProductsModal({
                 },
             });
             setUploadResult(res.data);
-        } catch (error: any) {
-            console.error(error);
+        } catch (error: unknown) {
+            const err = error as { response?: { data?: { detail?: string } } };
+            console.error(err);
             setUploadResult({
                 created: 0,
-                errors: [error.response?.data?.detail || "Error al procesar el archivo."],
+                errors: [err.response?.data?.detail || "Error al procesar el archivo."],
             });
         } finally {
             setLoading(false);

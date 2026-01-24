@@ -37,6 +37,7 @@ export default function CategoriesPage() {
             await api.delete(`/categories/${id}`);
             fetchCategories();
         } catch (error) {
+            if (process.env.NODE_ENV !== "production") console.error("Error deleting category", error);
             alert("No se pudo eliminar. Verifique que no tenga productos asociados.");
         }
     };
@@ -63,6 +64,7 @@ export default function CategoriesPage() {
             setIsModalOpen(false);
             fetchCategories();
         } catch (error) {
+            if (process.env.NODE_ENV !== "production") console.error("Error saving category", error);
             alert("Error al guardar categoría.");
         }
     };

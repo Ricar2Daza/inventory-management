@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import api from "@/services/api";
 
-// Interfaces Locales
 interface Product {
     id: number;
     name: string;
@@ -23,13 +22,14 @@ interface CartItem {
     quantity: number;
 }
 
+type ApiError = { response?: { data?: { detail?: string } } };
+
 export default function POSPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
     const [cart, setCart] = useState<CartItem[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
-    const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
 
     // New Sale States
@@ -50,9 +50,7 @@ export default function POSPage() {
                 setFilteredProducts(prodItems);
                 setClients(clientRes.data);
             } catch (error) {
-                console.error("Error loading data", error);
-            } finally {
-                setLoading(false);
+                if (process.env.NODE_ENV !== "production") console.error("Error loading data", error);
             }
         };
         loadInitialData();
@@ -137,8 +135,9 @@ export default function POSPage() {
             setProducts(Array.isArray(data) ? data : data.items);
 
             alert(`✅ Venta #${res.data.id} registrada con éxito!`);
-        } catch (error: any) {
-            alert("Error: " + (error.response?.data?.detail || "Error desconocido"));
+        } catch (error: unknown) {
+            const err = error as ApiError;
+            alert("Error: " + (err.response?.data?.detail || "Error desconocido"));
         } finally {
             setProcessing(false);
         }
@@ -154,7 +153,7 @@ export default function POSPage() {
             document.body.appendChild(link);
             link.click();
             link.remove();
-        } catch (error) {
+        } catch {
             alert("Error al descargar el recibo");
         }
     };

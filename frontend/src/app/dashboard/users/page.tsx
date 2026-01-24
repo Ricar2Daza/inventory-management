@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "@/services/api";
 import styles from "../products/page.module.css";
 import { useAuth } from "@/context/AuthContext";
@@ -14,6 +14,8 @@ interface User {
   full_name?: string;
   is_active?: boolean;
 }
+
+type ApiError = { response?: { status?: number; data?: { detail?: string } } };
 
 const initialForm = {
   username: "",
@@ -34,7 +36,7 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [formData, setFormData] = useState(initialForm);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -44,19 +46,21 @@ export default function UsersPage() {
       });
       const items = Array.isArray(data) ? data : (data.items || []);
       setUsers(items);
-    } catch (err: any) {
-      if (err.response?.status === 401) {
+    } catch (error: unknown) {
+      const err = error as ApiError;
+      const status = err.response?.status;
+      if (status === 401) {
         router.replace("/login");
         return;
       }
-      const msg = err.response?.status === 403
+      const msg = status === 403
         ? "Acceso restringido: solo administradores pueden listar usuarios."
         : (err.response?.data?.detail || "No se pudo obtener la lista de usuarios.");
       setError(msg);
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     if (user?.role !== "admin") {
@@ -65,7 +69,7 @@ export default function UsersPage() {
       return;
     }
     fetchUsers();
-  }, [user]);
+  }, [user, fetchUsers]);
 
   const handleOpenModal = (user: User | null = null) => {
     if (user) {
@@ -89,7 +93,8 @@ export default function UsersPage() {
     try {
       await api.delete(`/auth/users/${id}`);
       fetchUsers();
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as ApiError;
       const msg =
         err.response?.data?.detail || "No se pudo eliminar el usuario.";
       alert(msg);
@@ -106,7 +111,7 @@ export default function UsersPage() {
           role: formData.role,
           full_name: formData.full_name,
         };
-        const { data } = await api.put(`/auth/users/${editingUser.id}`, payload);
+        await api.put(`/auth/users/${editingUser.id}`, payload);
         setIsModalOpen(false);
         fetchUsers();
       } else {
@@ -121,7 +126,8 @@ export default function UsersPage() {
         setIsModalOpen(false);
         fetchUsers();
       }
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as ApiError;
       const msg =
         err.response?.data?.detail || "No se pudo guardar el usuario.";
       alert(msg);

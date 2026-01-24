@@ -13,6 +13,8 @@ interface Client {
     address: string;
 }
 
+type ApiError = { response?: { data?: { detail?: string } } };
+
 export default function ClientsPage() {
     const [clients, setClients] = useState<Client[]>([]);
     const [loading, setLoading] = useState(true);
@@ -32,7 +34,7 @@ export default function ClientsPage() {
             const { data } = await api.get("/clients/");
             setClients(data);
         } catch (error) {
-            console.error("Error loading clients", error);
+            if (process.env.NODE_ENV !== "production") console.error("Error loading clients", error);
         } finally {
             setLoading(false);
         }
@@ -54,8 +56,9 @@ export default function ClientsPage() {
             setEditingClient(null);
             setFormData({ name: "", email: "", phone: "", identification: "", address: "" });
             loadClients();
-        } catch (error: any) {
-            alert("Error: " + (error.response?.data?.detail || "No se pudo guardar"));
+        } catch (error: unknown) {
+            const err = error as ApiError;
+            alert("Error: " + (err.response?.data?.detail || "No se pudo guardar"));
         }
     };
 

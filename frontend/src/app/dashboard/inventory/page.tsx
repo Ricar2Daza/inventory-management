@@ -21,6 +21,8 @@ interface StockMovement {
     product: Product; // Asumiendo que el backend hace join o populate
 }
 
+type ApiError = { response?: { data?: { detail?: string } } };
+
 export default function InventoryPage() {
     const [movements, setMovements] = useState<StockMovement[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
@@ -64,13 +66,13 @@ export default function InventoryPage() {
                 quantity: Number(formData.quantity)
             });
 
-            // Reset form parcial
             setFormData(prev => ({ ...prev, quantity: 1, reason: "" }));
-            fetchData(); // Recargar historial
+            fetchData();
             alert("Movimiento registrado con éxito");
-        } catch (error: any) {
+        } catch (error: unknown) {
             if (process.env.NODE_ENV !== "production") console.error("Error creating movement", error);
-            alert(error.response?.data?.detail || "Error al registrar movimiento");
+            const err = error as ApiError;
+            alert(err.response?.data?.detail || "Error al registrar movimiento");
         }
     };
     return (

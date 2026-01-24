@@ -2,6 +2,7 @@
 
 import styles from "./Footer.module.css";
 import { useState } from "react";
+import Image from "next/image";
 import { useTheme } from "@/context/ThemeContext";
 
 export default function Footer() {
@@ -29,10 +30,12 @@ export default function Footer() {
   return (
     <footer className={styles.footer}>
       <div className={styles.brand}>
-        <img
+        <Image
           src={logoSrc}
           alt="Octava Capa"
           className={`${styles.logo} brand-mark`}
+          width={32}
+          height={32}
           onError={() => setLogoIndex(i => Math.min(i + 1, logoCandidates.length - 1))}
         />
         <span>Octava Capa — Software Development</span>

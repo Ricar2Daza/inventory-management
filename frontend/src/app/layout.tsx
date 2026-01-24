@@ -3,7 +3,6 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import QueryProvider from "@/providers/QueryProvider";
-import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Sistema de Inventario",

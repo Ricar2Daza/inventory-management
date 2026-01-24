@@ -11,6 +11,8 @@ interface Expense {
     date: string;
 }
 
+type ApiError = { response?: { data?: { detail?: string } } };
+
 export default function ExpensesPage() {
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [loading, setLoading] = useState(true);
@@ -28,7 +30,7 @@ export default function ExpensesPage() {
             const { data } = await api.get("/expenses/");
             setExpenses(data);
         } catch (error) {
-            console.error("Error loading expenses", error);
+            if (process.env.NODE_ENV !== "production") console.error("Error loading expenses", error);
         } finally {
             setLoading(false);
         }
@@ -48,8 +50,9 @@ export default function ExpensesPage() {
             setShowModal(false);
             setFormData({ description: "", amount: "", category: "General", date: new Date().toISOString().split('T')[0] });
             loadExpenses();
-        } catch (error: any) {
-            alert("Error: " + (error.response?.data?.detail || "No se pudo registrar"));
+        } catch (error: unknown) {
+            const err = error as ApiError;
+            alert("Error: " + (err.response?.data?.detail || "No se pudo registrar"));
         }
     };
 

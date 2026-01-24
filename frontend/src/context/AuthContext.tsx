@@ -1,10 +1,9 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/services/api";
 
-// Tipos basados en tu esquema de usuario
 interface User {
     id: number;
     username: string;
@@ -28,16 +27,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
+    const logout = useCallback(() => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setUser(null);
+        router.push("/login");
+    }, [router]);
+
     useEffect(() => {
-        // Al cargar la app, verificar si hay token y usuario guardado
         const checkAuth = async () => {
             const token = localStorage.getItem("token");
             if (token) {
                 try {
-                    // Validar token y obtener datos frescos del usuario
                     const { data } = await api.get('/auth/me');
                     setUser(data);
-                    // Actualizar usuario guardado por si acaso
                     localStorage.setItem("user", JSON.stringify(data));
                 } catch (error) {
                     if (process.env.NODE_ENV !== "production") console.error("Sesión inválida", error);
@@ -48,20 +51,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
 
         checkAuth();
-    }, []);
+    }, [logout]);
 
     const login = (token: string, userData: User) => {
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(userData));
         setUser(userData);
         window.location.replace("/dashboard");
-    };
-
-    const logout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        setUser(null);
-        router.push("/login");
     };
 
     return (

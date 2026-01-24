@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import styles from "./Sidebar.module.css";
@@ -36,8 +37,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const [logoIndex, setLogoIndex] = useState(0);
     const [navBusy, setNavBusy] = useState(false);
     const logoSrc = logoCandidates[logoIndex];
-
-    const baseMenu = [
+ 
+    type Role = "admin" | "manager" | "employee";
+    type MenuItem = { label: string; href: string; icon: string; roles: Role[] };
+ 
+    const baseMenu: MenuItem[] = [
         { label: "Dashboard", href: "/dashboard", icon: "📊", roles: ["admin", "manager", "employee"] },
         { label: "Ventas (POS)", href: "/dashboard/pos", icon: "🛒", roles: ["admin", "manager", "employee"] },
         { label: "Productos", href: "/dashboard/products", icon: "📦", roles: ["admin", "manager", "employee"] },
@@ -48,9 +52,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         { label: "Clientes", href: "/dashboard/clients", icon: "👤", roles: ["admin", "manager"] },
         { label: "Gastos", href: "/dashboard/expenses", icon: "💸", roles: ["admin", "manager"] },
         { label: "Reportes", href: "/dashboard/reports", icon: "📈", roles: ["admin", "manager"] },
-    ] as const;
-    const role = user?.role || "employee";
-    const menuItems = baseMenu.filter(item => item.roles.includes(role as any));
+    ];
+    const role: Role = (user?.role as Role) || "employee";
+    const menuItems = baseMenu.filter(item => item.roles.includes(role));
 
     const isActive = (path: string) => pathname === path;
 
@@ -63,11 +67,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''}`}>
                 <div className={styles.logoContainer}>
-                    <img
+                    <Image
                         src={logoSrc}
                         alt="Octava Capa"
                         className="brand-mark"
-                        style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }}
+                        width={36}
+                        height={36}
+                        style={{ objectFit: 'contain', borderRadius: 8 }}
                         onError={() => setLogoIndex(i => Math.min(i + 1, logoCandidates.length - 1))}
                     />
                     <span className={`${styles.logoText} brand-text-hide`}>Octava Capa</span>

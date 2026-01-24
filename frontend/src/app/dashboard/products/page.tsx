@@ -3,43 +3,37 @@
 import { useState, useEffect } from "react";
 import api from "@/services/api";
 import styles from "./page.module.css";
-import { useAuth } from "@/context/AuthContext";
 import ImportProductsModal from "@/components/products/ImportProductsModal";
+import { useProducts, Product } from "@/hooks/useProducts";
 
-// Interface simplificada según tu backend
-interface Product {
+interface Category {
     id: number;
     name: string;
-    sku: string;
-    current_stock: number;
-    min_stock_level: number;
-    unit_price: number;
-    category_id?: number;
-    supplier_id?: number;
 }
 
-export default function ProductsPage() {
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
-    const { user } = useAuth();
+interface Supplier {
+    id: number;
+    name: string;
+}
 
-    // Filters
+type ApiError = { response?: { data?: { detail?: string } } };
+
+export default function ProductsPage() {
+    const { products, isLoading, createProduct, updateProduct, deleteProduct, refetch } = useProducts();
+    const [searchTerm, setSearchTerm] = useState("");
+
     const [filterCategory, setFilterCategory] = useState<number | "">("");
     const [filterSupplier, setFilterSupplier] = useState<number | "">("");
 
-    // Modal state for Edit/Create
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-    // Modal state for Import
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
-    // Catálogos para el formulario
-    const [categories, setCategories] = useState<any[]>([]);
-    const [suppliers, setSuppliers] = useState<any[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+    const [loadingCatalogs, setLoadingCatalogs] = useState(true);
 
-    // Form state (using string for numbers to handle empty inputs gracefully)
     const [formData, setFormData] = useState({
         name: "",
         sku: "",
@@ -50,53 +44,33 @@ export default function ProductsPage() {
         supplier_id: 1
     });
 
-    const fetchProducts = async () => {
-        try {
-            setLoading(true);
-            const url = searchTerm
-                ? `/products/search?q=${searchTerm}`
-                : `/products/?limit=100`;
-
-            const { data } = await api.get(url);
-            const items = Array.isArray(data) ? data : (data.items || []);
-            setProducts(items);
-
-            // Cargar catálogos si no están cargados
-            if (categories.length === 0) {
-                try {
-                    const [catsRes, suppsRes] = await Promise.all([
-                        api.get("/categories/"),
-                        api.get("/suppliers/")
-                    ]);
-                    setCategories(catsRes.data);
-                    setSuppliers(suppsRes.data);
-                } catch (e) {
-                    if (process.env.NODE_ENV !== "production") console.error("Error cargando catálogos", e);
-                }
-            }
-
-        } catch (error) {
-            if (process.env.NODE_ENV !== "production") console.error("Error fetching products", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        const timer = setTimeout(() => {
-            fetchProducts();
-        }, 500);
-        return () => clearTimeout(timer);
-    }, [searchTerm]);
+        const loadCatalogs = async () => {
+            try {
+                setLoadingCatalogs(true);
+                const [catsRes, suppsRes] = await Promise.all([
+                    api.get<Category[]>("/categories/"),
+                    api.get<Supplier[]>("/suppliers/")
+                ]);
+                setCategories(catsRes.data);
+                setSuppliers(suppsRes.data);
+            } catch (error: unknown) {
+                if (process.env.NODE_ENV !== "production") console.error("Error cargando catálogos", error);
+            } finally {
+                setLoadingCatalogs(false);
+            }
+        };
+        loadCatalogs();
+    }, []);
 
     const handleDelete = async (id: number) => {
         if (!confirm("¿Estás seguro de eliminar este producto?")) return;
         try {
-            await api.delete(`/products/${id}`);
-            fetchProducts(); // Recargar
-        } catch (error: any) {
+            await deleteProduct(id);
+        } catch (error: unknown) {
             if (process.env.NODE_ENV !== "production") console.error("Error deleting product", error);
-            const message = error.response?.data?.detail || "No se pudo eliminar el producto";
+            const err = error as ApiError;
+            const message = err.response?.data?.detail || "No se pudo eliminar el producto";
             alert(`Error: ${message}`);
         }
     };
@@ -171,15 +145,15 @@ export default function ProductsPage() {
             };
 
             if (editingProduct) {
-                await api.put(`/products/${editingProduct.id}`, payload);
+                await updateProduct({ id: editingProduct.id, data: payload });
             } else {
-                await api.post("/products/", payload);
+                await createProduct(payload);
             }
             setIsModalOpen(false);
-            fetchProducts();
-        } catch (error: any) {
+        } catch (error: unknown) {
             if (process.env.NODE_ENV !== "production") console.error("Error saving product", error);
-            const message = error.response?.data?.detail || "Error al guardar el producto.";
+            const err = error as ApiError;
+            const message = err.response?.data?.detail || "Error al guardar el producto.";
             alert(`Error: ${message}`);
         }
     };
@@ -190,6 +164,17 @@ export default function ProductsPage() {
         if (current <= min) return { label: "Bajo Stock", class: styles.badgeWarning };
         return { label: "En Stock", class: styles.badgeSuccess };
     };
+
+    const filteredProducts = products.filter((p) => {
+        if (searchTerm && !p.name.toLowerCase().includes(searchTerm.toLowerCase()) && !p.sku.toLowerCase().includes(searchTerm.toLowerCase())) {
+            return false;
+        }
+        if (filterCategory && p.category_id !== filterCategory) return false;
+        if (filterSupplier && p.supplier_id !== filterSupplier) return false;
+        return true;
+    });
+
+    const loading = isLoading || loadingCatalogs;
 
     return (
         <div className={styles.container}>
@@ -252,10 +237,10 @@ export default function ProductsPage() {
                     <tbody>
                         {loading ? (
                             <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>Cargando...</td></tr>
-                        ) : products.length === 0 ? (
+                        ) : filteredProducts.length === 0 ? (
                             <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>No hay productos.</td></tr>
                         ) : (
-                            products.map((p) => {
+                            filteredProducts.map((p) => {
                                 const status = getStockStatus(p.current_stock, p.min_stock_level);
                                 return (
                                     <tr key={p.id}>
@@ -289,7 +274,7 @@ export default function ProductsPage() {
                 isOpen={isImportModalOpen}
                 onClose={() => setIsImportModalOpen(false)}
                 onSuccess={() => {
-                    fetchProducts();
+                    refetch();
                 }}
             />
 

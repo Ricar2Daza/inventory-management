@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import Image from "next/image";
 import { useTheme } from "@/context/ThemeContext";
 import styles from "./Header.module.css";
 import { usePathname } from "next/navigation";
@@ -59,8 +60,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
         const loadPreview = async () => {
             try {
                 const { data } = await api.get("/notifications/?limit=5&unread_only=true");
-                const items = Array.isArray(data) ? data : (data.items || []);
-                setPreview(items.map((n: any) => ({
+                const items = (Array.isArray(data) ? data : (data.items || [])) as Array<{
+                    id: number;
+                    title: string;
+                    type: string;
+                    is_read?: boolean;
+                    created_at: string;
+                }>;
+                setPreview(items.map((n) => ({
                     id: n.id,
                     title: n.title,
                     type: n.type,
@@ -100,11 +107,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 <button className={styles.menuButton} onClick={onMenuClick}>
                     ☰
                 </button>
-                <img
+                <Image
                     src={logoSrc}
                     alt="Octava Capa"
                     className="brand-mark"
-                    style={{ width: 28, height: 28, objectFit: 'contain', marginLeft: 8, marginRight: 8 }}
+                    width={28}
+                    height={28}
+                    style={{ objectFit: 'contain', marginLeft: 8, marginRight: 8 }}
                     onError={() => setLogoIndex(i => Math.min(i + 1, logoCandidates.length - 1))}
                 />
                 <h2 style={{ fontSize: '1.125rem', fontWeight: 600 }} className="brand-text-hide">{getTitle()}</h2>

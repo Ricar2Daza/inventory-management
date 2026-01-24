@@ -25,10 +25,12 @@ export const useProducts = () => {
     },
   });
 
+  type ProductInput = Omit<Product, "id" | "category" | "supplier">;
+
   const createProductMutation = useMutation({
-    mutationFn: async (newProduct: any) => {
+    mutationFn: async (newProduct: ProductInput) => {
       const { data } = await api.post('/products/', newProduct);
-      return data;
+      return data as Product;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -36,9 +38,9 @@ export const useProducts = () => {
   });
 
   const updateProductMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+    mutationFn: async ({ id, data }: { id: number; data: Partial<ProductInput> }) => {
       const { data: res } = await api.put(`/products/${id}`, data);
-      return res;
+      return res as Product;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });

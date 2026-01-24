@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "@/services/api";
 import styles from "../products/page.module.css";
 import { useRouter } from "next/navigation";
@@ -22,6 +22,8 @@ interface Preferences {
   email_notifications: boolean;
 }
 
+type ApiError = { response?: { data?: { detail?: string } } };
+
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,7 @@ export default function NotificationsPage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
 
-  const fetchPrefs = async () => {
+  const fetchPrefs = useCallback(async () => {
     try {
       const { data } = await api.get("/notifications/preferences/me");
       setPrefs({
@@ -40,23 +42,14 @@ export default function NotificationsPage() {
         out_of_stock_enabled: !!data.out_of_stock_enabled,
         email_notifications: !!data.email_notifications,
       });
-    } catch (err: any) {
-      if (process.env.NODE_ENV !== "production") console.error("Error fetching prefs", err);
+    } catch (error: unknown) {
+      if (process.env.NODE_ENV !== "production") console.error("Error fetching prefs", error);
     }
-  };
-
-  const viewNotification = async (id: number) => {
-    try {
-      const { data } = await api.get(`/notifications/${id}`);
-      setSelectedNotification(data);
-    } catch (err: any) {
-      alert(err.response?.data?.detail || "No se pudo cargar la notificación.");
-    }
-  };
+  }, []);
 
   const closeDetail = () => setSelectedNotification(null);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -64,29 +57,31 @@ export default function NotificationsPage() {
       const { data } = await api.get(`/notifications/${params}`);
       const items = Array.isArray(data) ? data : (data.items || []);
       setNotifications(items);
-    } catch (err: any) {
-      if (process.env.NODE_ENV !== "production") console.error("Error fetching notifications", err);
+    } catch (error: unknown) {
+      if (process.env.NODE_ENV !== "production") console.error("Error fetching notifications", error);
+      const err = error as ApiError;
       setError(err.response?.data?.detail || "No se pudo cargar notificaciones.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [unreadOnly]);
 
   useEffect(() => {
     if (!isAuthenticated || !user) return;
     fetchPrefs();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, fetchPrefs]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
     fetchNotifications();
-  }, [isAuthenticated, unreadOnly]);
+  }, [isAuthenticated, fetchNotifications]);
 
   const markAsRead = async (id: number) => {
     try {
       await api.put(`/notifications/${id}/read`);
       fetchNotifications();
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as ApiError;
       alert(err.response?.data?.detail || "No se pudo marcar como leída.");
     }
   };
@@ -95,7 +90,8 @@ export default function NotificationsPage() {
     try {
       await api.put(`/notifications/mark-all-read`);
       fetchNotifications();
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as ApiError;
       alert(err.response?.data?.detail || "No se pudo marcar todas como leídas.");
     }
   };
@@ -105,7 +101,8 @@ export default function NotificationsPage() {
     try {
       await api.delete(`/notifications/${id}`);
       fetchNotifications();
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as ApiError;
       alert(err.response?.data?.detail || "No se pudo eliminar la notificación.");
     }
   };
@@ -125,7 +122,8 @@ export default function NotificationsPage() {
         email_notifications: !!data.email_notifications,
       });
       alert("Preferencias actualizadas");
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as ApiError;
       alert(err.response?.data?.detail || "No se pudo guardar preferencias.");
     }
   };

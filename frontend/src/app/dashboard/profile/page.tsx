@@ -5,8 +5,15 @@ import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import styles from "./page.module.css";
 
+type ApiError = { response?: { data?: { detail?: string } } };
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+    const err = error as ApiError;
+    return err.response?.data?.detail || fallback;
+};
+
 export default function ProfilePage() {
-    const { user, login } = useAuth(); // Usamos login para actualizar el estado global si cambia el usuario
+    const { user } = useAuth();
     const [loading, setLoading] = useState(false);
 
     // Estados para Información Personal
@@ -37,15 +44,14 @@ export default function ProfilePage() {
         e.preventDefault();
         try {
             setLoading(true);
-            const { data } = await api.put("/auth/me", {
+            await api.put("/auth/me", {
                 full_name: profileData.full_name,
                 email: profileData.email
             });
             alert("✅ Perfil actualizado correctamente");
-            // Aquí idealmente actualizaríamos el contexto, pero por ahora basta con el alert
-        } catch (error: any) {
+        } catch (error: unknown) {
             if (process.env.NODE_ENV !== "production") console.error(error);
-            alert("❌ Error al actualizar perfil: " + (error.response?.data?.detail || "Error desconocido"));
+            alert("❌ Error al actualizar perfil: " + getErrorMessage(error, "Error desconocido"));
         } finally {
             setLoading(false);
         }
@@ -66,9 +72,9 @@ export default function ProfilePage() {
             });
             alert("✅ Contraseña cambiada exitosamente");
             setPassData({ current_password: "", new_password: "", confirm_password: "" });
-        } catch (error: any) {
+        } catch (error: unknown) {
             if (process.env.NODE_ENV !== "production") console.error(error);
-            alert("❌ Error al cambiar contraseña: " + (error.response?.data?.detail || "Contraseña actual incorrecta"));
+            alert("❌ Error al cambiar contraseña: " + getErrorMessage(error, "Contraseña actual incorrecta"));
         } finally {
             setLoading(false);
         }

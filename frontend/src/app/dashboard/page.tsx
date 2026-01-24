@@ -12,6 +12,31 @@ const StatCard = ({ title, value, color }: { title: string, value: string | numb
     </div>
 );
 
+interface RecentMovement {
+    id: number;
+    product_id: number;
+    movement_type: "entrada" | "salida";
+    quantity: number;
+    created_at: string;
+    product?: {
+        name?: string;
+    };
+}
+
+interface TopProduct {
+    product_id: number;
+    product_name: string;
+    sku: string;
+    quantity_out: number;
+}
+
+interface CategorySummary {
+    category_id: number;
+    category_name: string;
+    total_value: number;
+    total_products: number;
+}
+
 export default function DashboardPage() {
     const [stats, setStats] = useState({
         totalProducts: 0,
@@ -24,9 +49,9 @@ export default function DashboardPage() {
         totalRevenue: 0,
         averageOrderValue: 0
     });
-    const [recentMovements, setRecentMovements] = useState<any[]>([]);
-    const [topProducts, setTopProducts] = useState<any[]>([]);
-    const [categoriesData, setCategoriesData] = useState<any[]>([]);
+    const [recentMovements, setRecentMovements] = useState<RecentMovement[]>([]);
+    const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+    const [categoriesData, setCategoriesData] = useState<CategorySummary[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -56,7 +81,9 @@ export default function DashboardPage() {
                     averageOrderValue: salesRes.data.average_order_value
                 });
 
-                const moves = Array.isArray(movementsRes.data) ? movementsRes.data : (movementsRes.data.items || []);
+                const moves = Array.isArray(movementsRes.data)
+                    ? movementsRes.data
+                    : (movementsRes.data.items || []);
                 setRecentMovements(moves);
 
                 const tops = Array.isArray(topRes.data.products) ? topRes.data.products : [];
@@ -132,7 +159,7 @@ export default function DashboardPage() {
                         <p style={{ color: 'var(--text-secondary)' }}>No hay movimientos recientes.</p>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            {recentMovements.map((m: any) => (
+                            {recentMovements.map((m) => (
                                 <div key={m.id} style={{
                                     display: 'flex',
                                     justifyContent: 'space-between',

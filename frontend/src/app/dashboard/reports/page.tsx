@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import api from "@/services/api";
 import styles from "../products/page.module.css";
 import { downloadCSV } from "@/services/exportUtils";
@@ -77,104 +78,93 @@ interface DebtReport {
     total_debt: number;
 }
 
+interface CategorySummary {
+    total_stock?: number;
+}
+
+type ApiError = { response?: { data?: unknown } };
+
 export default function ReportsPage() {
-    const [summary, setSummary] = useState<InventorySummary | null>(null);
-    const [valueReport, setValueReport] = useState<StockValue | null>(null);
-    const [lowStock, setLowStock] = useState<ProductLowStock[]>([]);
-    const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
-    const [movementsSummary, setMovementsSummary] = useState<MovementSummary | null>(null);
-    const [supplierReport, setSupplierReport] = useState<SupplierInventory[]>([]);
-
-    const [totalStockUnits, setTotalStockUnits] = useState<number>(0);
-    const [loading, setLoading] = useState(true);
-
     const [movementsDays, setMovementsDays] = useState(30);
     const [topProductsDays, setTopProductsDays] = useState(30);
     const [financialDays, setFinancialDays] = useState(30);
-
-    const [financialBalance, setFinancialBalance] = useState<FinancialBalance | null>(null);
-    const [clientDebtReport, setClientDebtReport] = useState<DebtReport | null>(null);
-    const [supplierDebtReport, setSupplierDebtReport] = useState<DebtReport | null>(null);
 
     const [aiQuestion, setAiQuestion] = useState("");
     const [aiAnswer, setAiAnswer] = useState("");
     const [aiLoading, setAiLoading] = useState(false);
     const [aiError, setAiError] = useState("");
 
-    useEffect(() => {
-        const fetchGlobalData = async () => {
-            try {
-                setLoading(true);
-                const results = await Promise.all([
-                    api.get("/reports/inventory-summary"),
-                    api.get("/reports/stock-value"),
-                    api.get("/reports/low-stock"),
-                    api.get("/reports/by-category"),
-                    api.get("/reports/by-supplier"),
-                    api.get("/reports/debts/clients"),
-                    api.get("/reports/debts/suppliers")
-                ]);
+    const {
+        data: globalData,
+    } = useQuery({
+        queryKey: ["reports", "global"],
+        queryFn: async () => {
+            const results = await Promise.all([
+                api.get("/reports/inventory-summary"),
+                api.get("/reports/stock-value"),
+                api.get("/reports/low-stock"),
+                api.get("/reports/by-category"),
+                api.get("/reports/by-supplier"),
+                api.get("/reports/debts/clients"),
+                api.get("/reports/debts/suppliers")
+            ]);
 
-                setSummary(results[0].data);
-                setValueReport(results[1].data);
-                setLowStock(results[2].data?.products || []);
-                
-                const categories = results[3].data?.categories || [];
-                const totalUnits = categories.reduce(
-                    (acc: number, c: any) => acc + (c.total_stock || 0),
-                    0
-                );
-                setTotalStockUnits(totalUnits);
-                
-                setSupplierReport(results[4].data?.suppliers || []);
-                setClientDebtReport(results[5].data);
-                setSupplierDebtReport(results[6].data);
+            const categories = (results[3].data?.categories || []) as CategorySummary[];
+            const totalUnits = categories.reduce(
+                (acc: number, c: CategorySummary) => acc + (c.total_stock || 0),
+                0
+            );
 
-            } catch (error) {
-                console.error("Error fetching global reports", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+            return {
+                summary: results[0].data as InventorySummary,
+                valueReport: results[1].data as StockValue,
+                lowStock: (results[2].data?.products || []) as ProductLowStock[],
+                totalStockUnits: totalUnits as number,
+                supplierReport: (results[4].data?.suppliers || []) as SupplierInventory[],
+                clientDebtReport: results[5].data as DebtReport,
+                supplierDebtReport: results[6].data as DebtReport,
+            };
+        },
+    });
 
-        fetchGlobalData();
-    }, []);
+    const {
+        data: movementsSummary,
+    } = useQuery({
+        queryKey: ["reports", "movements", movementsDays],
+        queryFn: async () => {
+            const { data } = await api.get(`/reports/movements?days=${movementsDays}`);
+            return data as MovementSummary;
+        },
+    });
 
-    useEffect(() => {
-        const fetchMovements = async () => {
-            try {
-                const { data } = await api.get(`/reports/movements?days=${movementsDays}`);
-                setMovementsSummary(data);
-            } catch (error) {
-                console.error("Error fetching movements", error);
-            }
-        };
-        fetchMovements();
-    }, [movementsDays]);
+    const {
+        data: topProductsData,
+    } = useQuery({
+        queryKey: ["reports", "top-products", topProductsDays],
+        queryFn: async () => {
+            const { data } = await api.get(`/reports/top-products?limit=5&days=${topProductsDays}`);
+            return (data.products || []) as TopProduct[];
+        },
+    });
 
-    useEffect(() => {
-        const fetchTopProducts = async () => {
-            try {
-                const { data } = await api.get(`/reports/top-products?limit=5&days=${topProductsDays}`);
-                setTopProducts(data.products || []);
-            } catch (error) {
-                console.error("Error fetching top products", error);
-            }
-        };
-        fetchTopProducts();
-    }, [topProductsDays]);
+    const {
+        data: financialBalance,
+    } = useQuery({
+        queryKey: ["reports", "financial-balance", financialDays],
+        queryFn: async () => {
+            const { data } = await api.get(`/reports/financial-balance?days=${financialDays}`);
+            return data as FinancialBalance;
+        },
+    });
 
-    useEffect(() => {
-        const fetchFinancialBalance = async () => {
-            try {
-                const { data } = await api.get(`/reports/financial-balance?days=${financialDays}`);
-                setFinancialBalance(data);
-            } catch (error) {
-                console.error("Error fetching financial balance", error);
-            }
-        };
-        fetchFinancialBalance();
-    }, [financialDays]);
+    const summary = globalData?.summary ?? null;
+    const valueReport = globalData?.valueReport ?? null;
+    const lowStock = globalData?.lowStock ?? [];
+    const supplierReport = globalData?.supplierReport ?? [];
+    const totalStockUnits = globalData?.totalStockUnits ?? 0;
+    const clientDebtReport = globalData?.clientDebtReport ?? null;
+    const supplierDebtReport = globalData?.supplierDebtReport ?? null;
+    const topProducts = topProductsData ?? [];
 
     const handleAskAI = async () => {
         try {
@@ -186,24 +176,35 @@ export default function ReportsPage() {
                 question: aiQuestion || fallbackQuestion,
             });
             setAiAnswer(data.answer);
-        } catch (error: any) {
-            console.error("Error al consultar la IA", error);
-            const responseData = error?.response?.data;
-            const detail = responseData?.detail;
-            if (typeof detail === "string") {
-                setAiError(detail);
-            } else if (detail && typeof detail === "object") {
-                try {
-                    setAiError(JSON.stringify(detail, null, 2));
-                } catch {
-                    setAiError("No se pudo obtener una respuesta de la IA.");
+        } catch (error: unknown) {
+            if (process.env.NODE_ENV !== "production") console.error("Error al consultar la IA", error);
+            const apiError = error as ApiError;
+            const responseData = apiError.response?.data;
+
+            if (responseData && typeof responseData === "object") {
+                const detail = (responseData as { detail?: unknown }).detail;
+
+                if (typeof detail === "string") {
+                    setAiError(detail);
+                    return;
                 }
-            } else if (responseData) {
+
+                if (detail && typeof detail === "object") {
+                    try {
+                        setAiError(JSON.stringify(detail, null, 2));
+                    } catch {
+                        setAiError("No se pudo obtener una respuesta de la IA.");
+                    }
+                    return;
+                }
+
                 try {
                     setAiError(JSON.stringify(responseData, null, 2));
                 } catch {
                     setAiError("No se pudo obtener una respuesta de la IA.");
                 }
+            } else if (typeof responseData === "string") {
+                setAiError(responseData);
             } else {
                 setAiError("No se pudo obtener una respuesta de la IA.");
             }

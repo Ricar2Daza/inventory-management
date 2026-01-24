@@ -13,12 +13,14 @@ interface Supplier {
     address: string;
 }
 
+type ApiError = { response?: { data?: { detail?: string } } };
+
 export default function SuppliersPage() {
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery] = useState("");
 
     const initialForm = { name: "", contact_name: "", email: "", phone: "", address: "" };
     const [formData, setFormData] = useState(initialForm);
@@ -27,10 +29,10 @@ export default function SuppliersPage() {
         try {
             setLoading(true);
             const endpoint = query ? `/suppliers/search?q=${query}` : "/suppliers/";
-            const { data } = await api.get(endpoint);
+            const { data } = await api.get<Supplier[]>(endpoint);
             setSuppliers(data);
         } catch (error) {
-            console.error("Error fetching suppliers", error);
+            if (process.env.NODE_ENV !== "production") console.error("Error fetching suppliers", error);
         } finally {
             setLoading(false);
         }
@@ -49,8 +51,9 @@ export default function SuppliersPage() {
         try {
             await api.delete(`/suppliers/${id}`);
             fetchSuppliers();
-        } catch (error) {
-            alert("No se pudo eliminar el proveedor.");
+        } catch (error: unknown) {
+            const err = error as ApiError;
+            alert(err.response?.data?.detail || "No se pudo eliminar el proveedor.");
         }
     };
 
@@ -81,8 +84,9 @@ export default function SuppliersPage() {
             }
             setIsModalOpen(false);
             fetchSuppliers();
-        } catch (error) {
-            alert("Error al guardar proveedor.");
+        } catch (error: unknown) {
+            const err = error as ApiError;
+            alert(err.response?.data?.detail || "Error al guardar proveedor.");
         }
     };
 

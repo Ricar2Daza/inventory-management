@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "@/services/api";
 import styles from "../products/page.module.css";
 import { useAuth } from "@/context/AuthContext";
@@ -63,47 +63,58 @@ export default function WarehousesPage() {
     reason: "",
   });
 
-  const fetchWarehouses = async () => {
+  type ApiError = { response?: { data?: { detail?: string } } };
+ 
+  const getErrorMessage = useCallback((error: unknown, fallback: string) => {
+    const err = error as ApiError;
+    return err.response?.data?.detail || fallback;
+  }, []);
+ 
+  const fetchWarehouses = useCallback(async () => {
     try {
       setLoading(true);
-      const { data } = await api.get("/warehouses/?active_only=true&limit=100");
+      const { data } = await api.get<Warehouse[]>("/warehouses/?active_only=true&limit=100");
       setWarehouses(data);
       if (!selected && data.length > 0) setSelected(data[0]);
-    } catch (err: any) {
-      alert(err.response?.data?.detail || "No se pudo cargar almacenes.");
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, "No se pudo cargar almacenes."));
     } finally {
       setLoading(false);
     }
-  };
-
-  const fetchInventory = async (warehouseId: number) => {
-    try {
-      const { data } = await api.get(`/warehouses/${warehouseId}/inventory`);
-      setInventory(data);
-    } catch (err: any) {
-      alert(err.response?.data?.detail || "No se pudo cargar inventario del almacén.");
-    }
-  };
-
-  const fetchProducts = async () => {
+  }, [selected, getErrorMessage]);
+ 
+  const fetchInventory = useCallback(
+    async (warehouseId: number) => {
+      try {
+        const { data } = await api.get<ProductWarehouse[]>(`/warehouses/${warehouseId}/inventory`);
+        setInventory(data);
+      } catch (error: unknown) {
+        alert(getErrorMessage(error, "No se pudo cargar inventario del almacén."));
+      }
+    },
+    [getErrorMessage]
+  );
+ 
+  const fetchProducts = useCallback(async () => {
     try {
       const { data } = await api.get("/products/?limit=200");
-      const items = Array.isArray(data) ? data : data.items || [];
-      setProducts(items.map((p: any) => ({ id: p.id, name: p.name, sku: p.sku })));
+      const items = Array.isArray(data) ? data : (data.items || []);
+      const mapped = (items as Product[]).map((p) => ({ id: p.id, name: p.name, sku: p.sku }));
+      setProducts(mapped);
     } catch {
       setProducts([]);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) return;
     fetchWarehouses();
     fetchProducts();
-  }, [isAuthenticated]);
-
+  }, [isAuthenticated, fetchWarehouses, fetchProducts]);
+ 
   useEffect(() => {
     if (selected) fetchInventory(selected.id);
-  }, [selected]);
+  }, [selected, fetchInventory]);
 
   const handleOpenModal = (w: Warehouse | null = null) => {
     if (w) {
@@ -137,7 +148,7 @@ export default function WarehousesPage() {
       return;
     }
     try {
-      const payload: any = {
+      const payload = {
         name: formData.name,
         code: formData.code,
         address: formData.address || null,
@@ -152,8 +163,8 @@ export default function WarehousesPage() {
       }
       setIsModalOpen(false);
       fetchWarehouses();
-    } catch (err: any) {
-      alert(err.response?.data?.detail || "Error al guardar almacén.");
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, "Error al guardar almacén."));
     }
   };
 
@@ -167,8 +178,8 @@ export default function WarehousesPage() {
       await api.delete(`/warehouses/${id}`);
       if (selected?.id === id) setSelected(null);
       fetchWarehouses();
-    } catch (err: any) {
-      alert(err.response?.data?.detail || "No se pudo eliminar el almacén.");
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, "No se pudo eliminar el almacén."));
     }
   };
 
@@ -193,8 +204,8 @@ export default function WarehousesPage() {
       setAssignData({ product_id: "", stock: "0", min_stock_level: "0" });
       fetchInventory(selected.id);
       alert("Producto asignado.");
-    } catch (err: any) {
-      alert(err.response?.data?.detail || "No se pudo asignar el producto.");
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, "No se pudo asignar el producto."));
     }
   };
 
@@ -209,8 +220,8 @@ export default function WarehousesPage() {
         min_stock_level: changes.min_stock_level != null ? changes.min_stock_level : pw.min_stock_level,
       });
       if (selected) fetchInventory(selected.id);
-    } catch (err: any) {
-      alert(err.response?.data?.detail || "No se pudo actualizar el stock.");
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, "No se pudo actualizar el stock."));
     }
   };
 
@@ -238,8 +249,8 @@ export default function WarehousesPage() {
       });
       if (selected) fetchInventory(selected.id);
       alert("Transferencia realizada.");
-    } catch (err: any) {
-      alert(err.response?.data?.detail || "No se pudo realizar la transferencia.");
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, "No se pudo realizar la transferencia."));
     }
   };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import styles from "./page.module.css";
 import api from "@/services/api";
@@ -37,7 +38,8 @@ export default function LoginPage() {
             });
             login(tokenData.access_token, userData);
 
-        } catch (err: any) {
+        } catch (error: unknown) {
+            const err = error as { response?: { status?: number } };
             if (err.response?.status === 401) {
                 setError("Usuario o contraseña incorrectos.");
             } else if (err.response?.status === 422) {
@@ -54,11 +56,13 @@ export default function LoginPage() {
         <div className={styles.loginContainer}>
             <div className={styles.loginCard}>
                 <div className={styles.header}>
-                    <img
+                    <Image
                         src={theme === "dark" ? "/logo-octava-capa-remove.png" : "/logo-octava-capa.png"}
                         alt="Octava Capa"
                         className="brand-mark"
-                        style={{ width: 64, height: 64, objectFit: 'contain', marginBottom: '0.75rem' }}
+                        width={64}
+                        height={64}
+                        style={{ objectFit: 'contain', marginBottom: '0.75rem' }}
                         onError={(e) => {
                             const el = e.currentTarget as HTMLImageElement;
                             const candidates = [

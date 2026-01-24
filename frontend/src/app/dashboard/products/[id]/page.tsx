@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import api from "@/services/api";
 import { useParams, useRouter } from "next/navigation";
-import styles from "../page.module.css"; // Reutilizar estilos de tabla y contenedor
+import styles from "../page.module.css";
 
 interface ProductDetail {
     id: number;
@@ -26,6 +26,8 @@ interface StockMovement {
     user?: { username: string };
 }
 
+type ApiError = { response?: { status?: number; data?: { detail?: string } } };
+
 export default function ProductDetailPage() {
     const params = useParams();
     const router = useRouter();
@@ -47,12 +49,12 @@ export default function ProductDetailPage() {
                 ]);
 
                 setProduct(prodRes.data);
-                // El endpoint de movimientos devuelve una lista directa
                 setMovements(movRes.data);
 
-            } catch (err: any) {
-                console.error(err);
+            } catch (error: unknown) {
+                console.error(error);
                 setError("Error cargando información del producto.");
+                const err = error as ApiError;
                 if (err.response?.status === 404) setError("Producto no encontrado.");
             } finally {
                 setLoading(false);
