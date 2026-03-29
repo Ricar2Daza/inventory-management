@@ -13,9 +13,6 @@ class Settings(BaseSettings):
 
     BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
-    GROQ_API_KEY: Optional[str] = None
-    GROQ_MODEL: str = "llama-3.3-70b-specdec"
-
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
@@ -30,3 +27,4 @@ if settings.ENVIRONMENT == "production" and settings.SECRET_KEY == "default-secr
         "Por favor, configura una SECRET_KEY segura en las variables de entorno."
     )
 
+ 

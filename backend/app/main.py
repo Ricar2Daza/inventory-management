@@ -18,7 +18,6 @@ from app.routers import (
     orders,
     clients,
     expenses,
-    ai,
 )
 from app.models import inventory, financial, user, warehouse, notification, restaurant
 
@@ -70,7 +69,6 @@ app.include_router(warehouses.router)
 app.include_router(orders.router)
 app.include_router(clients.router)
 app.include_router(expenses.router)
-app.include_router(ai.router)
 
 
 @app.get("/", tags=["raíz"])

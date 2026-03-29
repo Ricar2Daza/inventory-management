@@ -92,6 +92,43 @@ def create_stock_movement(
     
     # Actualizar el stock del producto
     old_stock = product.current_stock
+    
+    # Manejo de stock por almacén si se especifica warehouse_id
+    if movement.warehouse_id:
+        from app.models.warehouse import ProductWarehouse
+        product_warehouse = db.query(ProductWarehouse).filter(
+            ProductWarehouse.product_id == movement.product_id,
+            ProductWarehouse.warehouse_id == movement.warehouse_id
+        ).first()
+        
+        if not product_warehouse:
+            # Si es entrada y no existe registro en almacén, crearlo
+            if movement.movement_type == MovementType.ENTRADA:
+                product_warehouse = ProductWarehouse(
+                    product_id=movement.product_id,
+                    warehouse_id=movement.warehouse_id,
+                    stock=0
+                )
+                db.add(product_warehouse)
+            else:
+                # Si es salida y no existe, error
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"No hay registro de inventario para este producto en el almacén especificado."
+                )
+        
+        # Actualizar stock del almacén específico
+        if movement.movement_type == MovementType.ENTRADA:
+            product_warehouse.stock += movement.quantity
+        else:
+            if product_warehouse.stock < movement.quantity:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Stock insuficiente en almacén. Stock actual: {product_warehouse.stock}"
+                )
+            product_warehouse.stock -= movement.quantity
+
+    # Actualizar stock global del producto (siempre se mantiene sincronizado)
     if movement.movement_type == MovementType.ENTRADA:
         product.current_stock += movement.quantity
     else:  # SALIDA

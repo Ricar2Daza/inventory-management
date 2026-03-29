@@ -43,3 +43,31 @@ La aplicación web estará disponible en: [http://localhost:3000](http://localho
 - **Usuario:** `admin`
 - **Contraseña:** `admin123`
 
+## 🚀 Roadmap y Futuras Funcionalidades
+
+Este proyecto tiene una visión clara de crecimiento para convertirse en una solución SaaS completa. Estas son las características planeadas para futuras versiones que permitirán escalar el valor del producto:
+
+### 🏪 Módulo POS (Punto de Venta)
+*Interfaz optimizada para venta rápida en mostrador.*
+- **Interfaz "Cajero"**: Diseño de alta visibilidad, teclas rápidas y soporte para pantallas táctiles.
+- **Ticket Rápido**: Generación e impresión térmica de recibos al instante.
+- **Arqueo de Caja**: Control de apertura y cierre de turno, conteo de efectivo y reporte de diferencias.
+
+### 🏢 Multi-Sucursal y Multi-Almacén
+*Gestión centralizada para negocios en expansión.*
+- **Inventario Distribuido**: Control de stock independiente por cada ubicación física.
+- **Transferencias**: Movimientos de mercancía entre almacenes con trazabilidad completa.
+- **Reportes Comparativos**: Análisis de rendimiento "Sucursal A vs Sucursal B".
+
+### ⚖️ Integraciones Fiscales y Contables
+*Cumplimiento normativo y automatización administrativa.*
+- **Facturación Electrónica**: Emisión de comprobantes fiscales válidos (según normativa local).
+- **Exportación Contable**: Generación de archivos compatibles con software contable estándar.
+- **Cálculo de Impuestos**: Gestión automática de IVA/Impuestos por producto y categoría.
+
+### 🧠 Inteligencia Artificial Avanzada
+*Asistente proactivo para la toma de decisiones.*
+- **Alertas Inteligentes**: Detección de patrones anómalos (ej. "Este producto dejó de moverse repentinamente").
+- **Sugerencias de Compra**: Recomendación automática de reabastecimiento basada en velocidad de ventas y tiempo de entrega del proveedor.
+- **Reportes Automáticos**: Envío programado de resúmenes ejecutivos vía WhatsApp o Email a los gerentes.
+

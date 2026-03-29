@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
 
@@ -18,6 +19,11 @@ class Warehouse(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # Relaciones inversas
+    product_stocks = relationship("ProductWarehouse", back_populates="warehouse")
+    stock_movements = relationship("StockMovement", back_populates="warehouse") # Necesita definirse en inventory.py también
+    orders = relationship("Order", back_populates="warehouse") # Necesita definirse en inventory.py también
+
 
 class ProductWarehouse(Base):
     """Modelo de Stock de Producto por Almacén"""
@@ -30,6 +36,10 @@ class ProductWarehouse(Base):
     min_stock_level = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relaciones
+    product = relationship("Product", back_populates="product_warehouses")
+    warehouse = relationship("Warehouse", back_populates="product_stocks")
 
     # Constraint para evitar duplicados
     __table_args__ = (

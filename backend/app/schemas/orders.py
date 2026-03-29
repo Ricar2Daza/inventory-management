@@ -7,7 +7,8 @@ class OrderItemSchema(BaseModel):
     quantity: int
     unit_price: float
     subtotal: float
-    product_name: str  # For convenience in frontend
+    product_name: str
+    tax_amount: float
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -18,11 +19,15 @@ class OrderCreateItem(BaseModel):
 class OrderCreate(BaseModel):
     payment_method: str
     client_id: Optional[int] = None
+    warehouse_id: Optional[int] = None # Nuevo campo
     items: List[OrderCreateItem]
 
 class OrderResponse(BaseModel):
     id: int
     client_id: Optional[int] = None
+    warehouse_id: Optional[int] = None # Nuevo campo
+    subtotal: float
+    tax_amount: float
     total_amount: float
     payment_method: str
     status: str

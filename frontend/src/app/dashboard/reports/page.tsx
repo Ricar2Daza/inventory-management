@@ -89,11 +89,6 @@ export default function ReportsPage() {
     const [topProductsDays, setTopProductsDays] = useState(30);
     const [financialDays, setFinancialDays] = useState(30);
 
-    const [aiQuestion, setAiQuestion] = useState("");
-    const [aiAnswer, setAiAnswer] = useState("");
-    const [aiLoading, setAiLoading] = useState(false);
-    const [aiError, setAiError] = useState("");
-
     const {
         data: globalData,
     } = useQuery({
@@ -166,98 +161,9 @@ export default function ReportsPage() {
     const supplierDebtReport = globalData?.supplierDebtReport ?? null;
     const topProducts = topProductsData ?? [];
 
-    const handleAskAI = async () => {
-        try {
-            setAiLoading(true);
-            setAiError("");
-            const fallbackQuestion =
-                "Genera un resumen ejecutivo de la situación del inventario y las finanzas y propone entre 3 y 7 acciones concretas para mejorar el negocio.";
-            const { data } = await api.post("/ai/report-summary", {
-                question: aiQuestion || fallbackQuestion,
-            });
-            setAiAnswer(data.answer);
-        } catch (error: unknown) {
-            if (process.env.NODE_ENV !== "production") console.error("Error al consultar la IA", error);
-            const apiError = error as ApiError;
-            const responseData = apiError.response?.data;
-
-            if (responseData && typeof responseData === "object") {
-                const detail = (responseData as { detail?: unknown }).detail;
-
-                if (typeof detail === "string") {
-                    setAiError(detail);
-                    return;
-                }
-
-                if (detail && typeof detail === "object") {
-                    try {
-                        setAiError(JSON.stringify(detail, null, 2));
-                    } catch {
-                        setAiError("No se pudo obtener una respuesta de la IA.");
-                    }
-                    return;
-                }
-
-                try {
-                    setAiError(JSON.stringify(responseData, null, 2));
-                } catch {
-                    setAiError("No se pudo obtener una respuesta de la IA.");
-                }
-            } else if (typeof responseData === "string") {
-                setAiError(responseData);
-            } else {
-                setAiError("No se pudo obtener una respuesta de la IA.");
-            }
-        } finally {
-            setAiLoading(false);
-        }
-    };
-
     return (
         <div className={styles.container}>
             <h1 className={styles.title}>Reportes y Análisis</h1>
-
-            <div className="card" style={{ marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                        <h2 style={{ fontSize: '1rem', fontWeight: 600 }}>🤖 Explicación con IA</h2>
-                        <button
-                            className="btn"
-                            style={{ fontSize: '0.85rem' }}
-                            onClick={handleAskAI}
-                            disabled={aiLoading}
-                        >
-                            {aiLoading ? "Analizando..." : "Analizar reportes con IA"}
-                        </button>
-                    </div>
-                    <textarea
-                        className="input"
-                        style={{ minHeight: '70px', fontSize: '0.9rem' }}
-                        placeholder="Escribe una pregunta opcional para la IA, por ejemplo: ¿Qué decisiones tomarías esta semana con estos datos?"
-                        value={aiQuestion}
-                        onChange={(e) => setAiQuestion(e.target.value)}
-                    />
-                    {aiError && (
-                        <p style={{ color: 'var(--error-color)', fontSize: '0.85rem' }}>
-                            {aiError}
-                        </p>
-                    )}
-                    {aiAnswer && (
-                        <div
-                            style={{
-                                marginTop: '0.5rem',
-                                padding: '0.75rem',
-                                borderRadius: '6px',
-                                backgroundColor: 'var(--bg-color)',
-                                fontSize: '0.9rem',
-                                whiteSpace: 'pre-wrap',
-                            }}
-                        >
-                            {aiAnswer}
-                        </div>
-                    )}
-                </div>
-            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
                 <div className="card" style={{ textAlign: 'center', padding: '1rem' }}>

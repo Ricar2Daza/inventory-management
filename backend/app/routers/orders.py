@@ -1,11 +1,14 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 from typing import List
 
 from app.database import get_db
 from app.models.inventory import Order, OrderItem, Product, StockMovement, MovementType, Client
+from app.models.financial import Invoice
 from app.schemas.orders import OrderCreate, OrderResponse, OrderItemSchema
+from app.schemas.financial import Invoice as InvoiceSchema, InvoiceCreate
 from app.auth import get_current_active_user
 from app.models.user import User
 
@@ -40,6 +43,8 @@ def create_order(
     """
     logger.info(f"Creando nueva orden. Cliente ID: {order_data.client_id}, Items: {len(order_data.items)}")
     total_amount = 0.0
+    subtotal_amount = 0.0
+    tax_amount = 0.0
     db_items = []
     
     # Obtener IDs de productos
@@ -59,25 +64,29 @@ def create_order(
         if product.current_stock < item.quantity:
             raise HTTPException(status_code=400, detail=f"Stock insuficiente para '{product.name}'. Disponible: {product.current_stock}")
         
-        # Calcular montos
         subtotal = product.unit_price * item.quantity
-        total_amount += subtotal
-        
-        # Preparar objeto OrderItem (aún no guardado)
+        subtotal_amount += subtotal
+        line_tax = 0.0
+        tax_amount += line_tax
+        total_amount = subtotal_amount + tax_amount
+
         db_item = OrderItem(
             product_id=product.id,
             quantity=item.quantity,
             unit_price=product.unit_price,
-            subtotal=subtotal
+            subtotal=subtotal,
+            tax_amount=line_tax
         )
         db_items.append(db_item)
 
     # 2. Transacción Atómica
     try:
-        # Crear Orden
         new_order = Order(
             client_id=order_data.client_id,
+            warehouse_id=order_data.warehouse_id,
             total_amount=total_amount,
+            subtotal=subtotal_amount,
+            tax_amount=tax_amount,
             payment_method=order_data.payment_method,
             status="completed"
         )
@@ -102,10 +111,11 @@ def create_order(
             # Registrar Movimiento
             movement = StockMovement(
                 product_id=product.id,
+                warehouse_id=new_order.warehouse_id,
                 movement_type=MovementType.SALIDA,
                 quantity=db_item.quantity,
                 reason=f"Venta #{new_order.id}",
-                created_by="Sistema POS" 
+                created_by="Sistema POS"
             )
             db.add(movement)
             
@@ -137,6 +147,59 @@ def get_orders(
     ).order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
     
     return orders
+
+
+@router.post("/{order_id}/invoice", response_model=InvoiceSchema, status_code=status.HTTP_201_CREATED)
+def create_invoice_for_order(
+    order_id: int,
+    invoice_data: InvoiceCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    order = db.query(Order).options(joinedload(Order.invoice)).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Orden no encontrada")
+    if order.invoice:
+        raise HTTPException(status_code=400, detail="La orden ya tiene una factura emitida")
+
+    series = invoice_data.series.strip()
+    if not series:
+        raise HTTPException(status_code=400, detail="La serie de la factura es obligatoria")
+
+    last_number = db.query(func.max(Invoice.number)).filter(Invoice.series == series).scalar() or 0
+    next_number = last_number + 1
+
+    subtotal = order.subtotal if order.subtotal is not None else order.total_amount
+    tax_amount = order.tax_amount if order.tax_amount is not None else 0.0
+
+    invoice = Invoice(
+        order_id=order.id,
+        series=series,
+        number=next_number,
+        subtotal=subtotal,
+        tax_amount=tax_amount,
+        total_amount=order.total_amount
+    )
+
+    db.add(invoice)
+    db.commit()
+    db.refresh(invoice)
+
+    return invoice
+
+
+@router.get("/{order_id}/invoice", response_model=InvoiceSchema)
+def get_invoice_for_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    order = db.query(Order).options(joinedload(Order.invoice)).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Orden no encontrada")
+    if not order.invoice:
+        raise HTTPException(status_code=404, detail="La orden no tiene factura emitida")
+    return order.invoice
 
 @router.get("/{order_id}", response_model=OrderResponse)
 def get_order(
@@ -215,7 +278,16 @@ def generate_order_receipt(
 
     c.line(5*mm, y - 2*mm, p_width - 5*mm, y - 2*mm)
     y -= 8*mm
-    
+
+    c.setFont("Helvetica-Bold", 9)
+    c.drawString(5*mm, y, "SUBTOTAL:")
+    c.drawRightString(p_width - 5*mm, y, f"${order.subtotal:,.2f}")
+    y -= 5*mm
+
+    c.drawString(5*mm, y, "IMPUESTO:")
+    c.drawRightString(p_width - 5*mm, y, f"${order.tax_amount:,.2f}")
+    y -= 5*mm
+
     c.setFont("Helvetica-Bold", 12)
     c.drawString(5*mm, y, "TOTAL:")
     c.drawRightString(p_width - 5*mm, y, f"${order.total_amount:,.2f}")

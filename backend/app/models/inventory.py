@@ -79,6 +79,7 @@ class Product(Base):
     category = relationship("Category", back_populates="products")
     supplier = relationship("Supplier", back_populates="products")
     stock_movements = relationship("StockMovement", back_populates="product")
+    product_warehouses = relationship("ProductWarehouse", back_populates="product")
 
 
 class StockMovement(Base):
@@ -87,6 +88,7 @@ class StockMovement(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    warehouse_id = Column(Integer, ForeignKey("warehouses.id"), nullable=True)  # Nuevo campo
     movement_type = Column(Enum(MovementType), nullable=False)
     quantity = Column(Integer, nullable=False)
     reason = Column(String(500))
@@ -95,6 +97,7 @@ class StockMovement(Base):
 
     # Relación con producto
     product = relationship("Product", back_populates="stock_movements")
+    warehouse = relationship("Warehouse", back_populates="stock_movements")
 
 
 class Order(Base):
@@ -104,7 +107,10 @@ class Order(Base):
     id = Column(Integer, primary_key=True, index=True)
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=True)
     table_id = Column(Integer, ForeignKey("tables.id"), nullable=True)
+    warehouse_id = Column(Integer, ForeignKey("warehouses.id"), nullable=True) # Nuevo campo: Sucursal de venta
     total_amount = Column(Float, nullable=False)
+    subtotal = Column(Float, default=0.0)
+    tax_amount = Column(Float, default=0.0)
     payment_method = Column(String(50), nullable=False) # efectivo, tarjeta, etc.
     status = Column(String(20), default="completed") # completed, cancelled, pending (para créditos)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -112,6 +118,8 @@ class Order(Base):
     # Relaciones
     client = relationship("Client", back_populates="orders")
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
+    warehouse = relationship("Warehouse", back_populates="orders")
+    invoice = relationship("Invoice", back_populates="order", uselist=False)
 
 
 class OrderItem(Base):
@@ -122,8 +130,9 @@ class OrderItem(Base):
     order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     quantity = Column(Integer, nullable=False)
-    unit_price = Column(Float, nullable=False) # Precio al momento de la venta
+    unit_price = Column(Float, nullable=False)
     subtotal = Column(Float, nullable=False)
+    tax_amount = Column(Float, default=0.0)
 
     # Relaciones
     order = relationship("Order", back_populates="items")

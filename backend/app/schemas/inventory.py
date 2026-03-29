@@ -143,6 +143,7 @@ class Product(ProductBase):
 
 class StockMovementBase(BaseModel):
     product_id: int
+    warehouse_id: Optional[int] = None # Nuevo campo
     movement_type: MovementType
     quantity: int = Field(..., gt=0)
     reason: Optional[str] = Field(None, max_length=500)
